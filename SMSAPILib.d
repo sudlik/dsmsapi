@@ -1,0 +1,286 @@
+module SMSAPILib;
+
+import std.conv             : text, to;
+import std.digest.digest    : toHexString;
+import std.digest.md        : md5Of;
+import std.socket           : InternetAddress, TcpSocket;
+import std.socketstream     : SocketStream;
+import std.stream           : Stream;
+import std.uri              : encode;
+
+enum CHARSET : string {
+    DEFAULT         = "",
+    ISO_8859_1      = "iso-8859-1",
+    ISO_8859_2      = "iso-8859-2",
+    ISO_8859_3      = "iso-8859-3",
+    ISO_8859_4      = "iso-8859-4",
+    ISO_8859_5      = "iso-8859-5",
+    ISO_8859_7      = "iso-8859-7",
+    UTF_8           = "utf-8",
+    WINDOWS_1250    = "windows-1250",
+    WINDOWS_1251    = "windows-1251",
+}
+
+struct Sender
+{
+    string name;
+
+    string toString()
+    {
+        return name;
+    }
+}
+
+struct Receiver
+{
+    uint phone;
+
+    string toString()
+    {
+        return to!string(phone);
+    }
+}
+
+struct Message
+{
+    string raw;
+    string safe;
+
+    this(string value)
+    {
+        raw     = value;
+        safe    = encode(value);
+    }
+
+    string toString()
+    {
+        return safe;
+    }
+}
+
+struct Response
+{
+    string content;
+
+    string toString()
+    {
+        return content;
+    }
+}
+
+struct User
+{
+    ubyte[16]   hash;
+    string      name;
+
+    this(string name, ubyte[16] hash)
+    {
+        this.name = name;
+        this.hash = hash;
+    }
+
+    this(string name, string pass)
+    {
+        this.name = name;
+        this.hash = md5Of(pass);
+    }
+}
+
+class Sms
+{
+    private:
+        string      charset;
+        Message     message;
+        Receiver[]  receivers;
+        Sender      sender;
+
+    public:
+        this(Sender sender, Receiver[] receivers, Message message, CHARSET charset = CHARSET.DEFAULT)
+        {
+            setSender(sender);
+            setReceivers(receivers);
+            setMessage(message);
+            setCharset(charset);
+        }
+
+        Sender getSender()
+        {
+            return sender;
+        }
+
+        Receiver[] getReceivers()
+        {
+            return receivers;
+        }
+
+        Message getMessage()
+        {
+            return message;
+        }
+
+    protected:
+        void setSender(Sender value)
+        {
+            sender = value;
+        }
+
+        string getCharset()
+        {
+            return charset;
+        }
+
+        void setReceivers(Receiver[] value)
+        {
+            receivers = value;
+        }
+
+        void setMessage(Message value)
+        {
+            message = value;
+        }
+
+        void setCharset(string value)
+        {
+            charset = value;
+        }
+}
+
+class Api
+{
+    static const ushort PORT = 80;
+
+    static const string HOST                = "api.smsapi.pl";
+    static const string PATH                = "sms.do";
+    static const string METHOD              = "METHOD";
+    static const string USER_AGENT          = "SMSAPILib.d";
+    static const string PROTOCOL_NAME       = "HTTP";
+    static const string PROTOCOL_VERSION    = "1.1";
+
+    private:
+        bool    test;
+        Stream  stream;
+        User    user;
+
+    public:
+        this(User user, bool test = false)
+        {
+            setUser(user);
+            setTest(test);
+            setStream(createStream(getHost(), getPort()));
+        }
+
+        Response send(Sms sms)
+        {
+            string content;
+            
+            getStream().writeString(
+                getMethod() ~ " /" ~ getPath() ~ asQuery(sms) ~ " " ~
+                getProtocolName() ~ "/" ~ getProtocolVersion() ~ "\r\n"
+                "Host: "  ~ getHost() ~ "\r\n"
+                "User-Agent: " ~ getUserAgent() ~ "\r\n\r\n"
+            );
+            
+            while (!getStream().eof()) {
+                content ~= getStream().readLine();
+            }
+
+            return Response(content);
+        }
+
+    protected:
+        string asQuery(Sms value)
+        {
+            string receivers;
+
+            foreach (Receiver receiver; value.getReceivers()) {
+                receivers ~= "&to[]=" ~ text(receiver);
+            }
+
+            return to!string(
+                "?username=" ~ getUser().name ~
+                "&password=" ~ toHexString(getUser().hash) ~
+                "&from=" ~ text(value.getSender()) ~
+                receivers ~
+                "&format=json" ~
+                (value.getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ value.getCharset() : "") ~
+                (getTest() ? "&test=1" : "") ~
+                "&message=" ~ value.getMessage().safe
+            );
+        }
+
+        User getUser()
+        {
+            return user;
+        }
+
+        bool getTest()
+        {
+            return test;
+        }
+
+        string getMethod()
+        {
+            return METHOD;
+        }
+
+        string getPath()
+        {
+            return PATH;
+        }
+
+        string getHost()
+        {
+            return HOST;
+        }
+
+        ushort getPort()
+        {
+            return PORT;
+        }
+
+        string getUserAgent()
+        {
+            return USER_AGENT;
+        }
+
+        string getProtocolName()
+        {
+            return PROTOCOL_NAME;
+        }
+
+        string getProtocolVersion()
+        {
+            return PROTOCOL_VERSION;
+        }
+
+        Api setUser(User value)
+        {
+            user = value;
+
+            return this;
+        }
+
+        Api setTest(bool value)
+        {
+            test = value;
+
+            return this;
+        }
+        
+        SocketStream createStream(string host, ushort port)
+        {
+            return new SocketStream(new TcpSocket(new InternetAddress(host, port)));
+        }
+
+        Api setStream(SocketStream value)
+        {
+            stream = value;
+
+            return this;
+        }
+
+        Stream getStream()
+        {
+            return stream;
+        }
+}
