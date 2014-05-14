@@ -43,18 +43,11 @@ struct Receiver
 
 struct Message
 {
-    string raw;
-    string safe;
-
-    this(string value)
-    {
-        raw     = value;
-        safe    = encode(value);
-    }
+    string content;
 
     string toString()
     {
-        return safe;
+        return content;
     }
 }
 
@@ -70,8 +63,8 @@ struct Response
 
 struct User
 {
-    ubyte[16]   hash;
     string      name;
+    ubyte[16]   hash;
 
     this(string name, ubyte[16] hash)
     {
@@ -99,6 +92,14 @@ class Sms
         {
             setSender(sender);
             setReceivers(receivers);
+            setMessage(message);
+            setCharset(charset);
+        }
+
+        this(Sender sender, Receiver receiver, Message message, CHARSET charset = CHARSET.DEFAULT)
+        {
+            setSender(sender);
+            setReceivers([receiver]);
             setMessage(message);
             setCharset(charset);
         }
@@ -172,7 +173,7 @@ class Api
         Response send(Sms sms)
         {
             string content;
-            
+
             getStream().writeString(
                 getMethod() ~ " /" ~ getPath() ~ asQuery(sms) ~ " " ~
                 getProtocolName() ~ "/" ~ getProtocolVersion() ~ "\r\n"
@@ -193,19 +194,18 @@ class Api
             string receivers;
 
             foreach (Receiver receiver; value.getReceivers()) {
-                receivers ~= "&to[]=" ~ text(receiver);
+                receivers ~= "&to[]=" ~ encode(text(receiver));
             }
 
-            return to!string(
-                "?username=" ~ getUser().name ~
-                "&password=" ~ toHexString(getUser().hash) ~
-                "&from=" ~ text(value.getSender()) ~
+            return
+                "?username=" ~ encode(getUser().name) ~
+                "&password=" ~ encode(text(toHexString(getUser().hash))) ~
+                "&from=" ~  encode(text(value.getSender())) ~
                 receivers ~
                 "&format=json" ~
-                (value.getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ value.getCharset() : "") ~
+                (value.getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ encode(value.getCharset()) : "") ~
                 (getTest() ? "&test=1" : "") ~
-                "&message=" ~ value.getMessage().safe
-            );
+                "&message=" ~ encode(text(value.getMessage()));
         }
 
         User getUser()
