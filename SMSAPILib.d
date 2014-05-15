@@ -79,6 +79,26 @@ struct User
     }
 }
 
+struct Subject
+{
+    string content;
+
+    string toString()
+    {
+        return content;
+    }
+}
+
+struct Smil
+{
+    string content;
+
+    string toString()
+    {
+        return content;
+    }
+}
+
 class Sms
 {
     private:
@@ -146,12 +166,73 @@ class Sms
         }
 }
 
+class Mms
+{
+    private:
+        Receiver[]  receivers;
+        Smil        smil;
+        Subject     subject;
+
+    public:
+        this(Subject subject, Receiver[] receivers, Smil smil)
+        {
+            setSubject(subject);
+            setReceivers(receivers);
+            setSmil(smil);
+        }
+
+        this(Subject subject, Receiver receiver, Smil smil)
+        {
+            setSubject(subject);
+            setReceivers([receiver]);
+            setSmil(smil);
+        }
+
+        Subject getSubject()
+        {
+            return subject;
+        }
+
+        Receiver[] getReceivers()
+        {
+            return receivers;
+        }
+
+        Smil getSmil()
+        {
+            return smil;
+        }
+
+    protected:
+        Mms setSubject(Subject value)
+        {
+            subject = value;
+
+            return this;
+        }
+
+        Mms setReceivers(Receiver[] value)
+        {
+            receivers = value;
+
+            return this;
+        }
+
+        Mms setSmil(Smil value)
+        {
+            smil = value;
+
+            return this;
+        }
+}
+
 class Api
 {
     static const ushort PORT = 80;
 
-    static const string HOST                = "api.smsapi.pl";
+    static const string HOST                = "panel.***REMOVED***";
     static const string PATH                = "sms.do";
+    static const string MMS_PATH            = "mms.do";
     static const string METHOD              = "METHOD";
     static const string USER_AGENT          = "SMSAPILib.d";
     static const string PROTOCOL_NAME       = "HTTP";
@@ -188,6 +269,24 @@ class Api
             return Response(content);
         }
 
+        Response send(Mms mms)
+        {
+            string content;
+
+            getStream().writeString(
+                getMethod() ~ " /" ~ getMmsPath() ~ asQuery(mms) ~ " " ~
+                getProtocolName() ~ "/" ~ getProtocolVersion() ~ "\r\n"
+                "Host: "  ~ getHost() ~ "\r\n"
+                "User-Agent: " ~ getUserAgent() ~ "\r\n\r\n"
+            );
+            
+            while (!getStream().eof()) {
+                content ~= getStream().readLine();
+            }
+
+            return Response(content);
+        }
+
     protected:
         string asQuery(Sms value)
         {
@@ -208,6 +307,24 @@ class Api
                 "&message=" ~ encode(text(value.getMessage()));
         }
 
+        string asQuery(Mms value)
+        {
+            string receivers;
+
+            foreach (Receiver receiver; value.getReceivers()) {
+                receivers ~= "&to[]=" ~ encode(text(receiver));
+            }
+
+            return
+                "?username=" ~ encode(getUser().name) ~
+                "&password=" ~ encode(text(toHexString(getUser().hash))) ~
+                "&subject=" ~  encode(text(value.getSubject())) ~
+                receivers ~
+                "&format=json" ~
+                (getTest() ? "&test=1" : "") ~
+                "&smil=" ~ encode(text(value.getSmil()));
+        }
+
         User getUser()
         {
             return user;
@@ -226,6 +343,11 @@ class Api
         string getPath()
         {
             return PATH;
+        }
+
+        string getMmsPath()
+        {
+            return MMS_PATH;
         }
 
         string getHost()
