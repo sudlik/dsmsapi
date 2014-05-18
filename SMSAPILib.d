@@ -21,6 +21,11 @@ enum CHARSET : string {
     WINDOWS_1251    = "windows-1251",
 }
 
+enum TYPE {
+    ECO = "ECO",
+    WAY = "2Way",
+}
+
 struct Sender
 {
     string name;
@@ -41,7 +46,7 @@ struct Receiver
     }
 }
 
-struct Message
+struct Content
 {
     string content;
 
@@ -89,39 +94,71 @@ struct Subject
     }
 }
 
-struct Smil
-{
-    string content;
-
-    string toString()
-    {
-        return content;
-    }
-}
-
-class Sms
+abstract class Message
 {
     private:
-        string      charset;
-        Message     message;
         Receiver[]  receivers;
-        Sender      sender;
+        Content     content;
 
     public:
-        this(Sender sender, Receiver[] receivers, Message message, CHARSET charset = CHARSET.DEFAULT)
+        Receiver[] getReceivers()
+        {
+            return receivers;
+        }
+
+        Content getContent()
+        {
+            return content;
+        }
+
+    protected:
+        Message setReceivers(Receiver[] value)
+        {
+            receivers = value;
+
+            return this;
+        }
+
+        Message setContent(Content value)
+        {
+            content = value;
+
+            return this;
+        }
+}
+
+class Sms : Message
+{
+    private:
+        string  charset;
+        Sender  sender;
+        TYPE    type;
+
+    public:
+        this(Sender sender, Receiver[] receivers, Content content, CHARSET charset = CHARSET.DEFAULT)
         {
             setSender(sender);
             setReceivers(receivers);
-            setMessage(message);
+            setContent(content);
             setCharset(charset);
         }
 
-        this(Sender sender, Receiver receiver, Message message, CHARSET charset = CHARSET.DEFAULT)
+        this(TYPE type, Receiver[] receivers, Content content, CHARSET charset = CHARSET.DEFAULT)
         {
-            setSender(sender);
-            setReceivers([receiver]);
-            setMessage(message);
+            setType(type);
+            setReceivers(receivers);
+            setContent(content);
             setCharset(charset);
+        }
+
+        this(Sender sender, Receiver receiver, Content content, CHARSET charset = CHARSET.DEFAULT)
+        {
+            this(sender, [receiver], content, charset);
+        }
+
+        this(TYPE type, Receiver receiver, Content content, CHARSET charset = CHARSET.DEFAULT)
+        {
+            this(type, [receiver], content, charset);
         }
 
         Sender getSender()
@@ -129,78 +166,59 @@ class Sms
             return sender;
         }
 
-        Receiver[] getReceivers()
-        {
-            return receivers;
-        }
-
-        Message getMessage()
-        {
-            return message;
-        }
-
-    protected:
-        void setSender(Sender value)
-        {
-            sender = value;
-        }
-
         string getCharset()
         {
             return charset;
         }
 
-        void setReceivers(Receiver[] value)
+        TYPE getType()
         {
-            receivers = value;
+            return type;
         }
 
-        void setMessage(Message value)
+    protected:
+        Sms setSender(Sender value)
         {
-            message = value;
+            sender = value;
+
+            return this;
         }
 
-        void setCharset(string value)
+        Sms setCharset(string value)
         {
             charset = value;
+
+            return this;
+        }
+
+        Sms setType(TYPE value)
+        {
+            type = value;
+
+            return this;
         }
 }
 
-class Mms
+class Mms : Message
 {
-    private:
-        Receiver[]  receivers;
-        Smil        smil;
-        Subject     subject;
+    private Subject subject;
 
     public:
-        this(Subject subject, Receiver[] receivers, Smil smil)
+        this(Subject subject, Receiver[] receivers, Content content)
         {
             setSubject(subject);
             setReceivers(receivers);
-            setSmil(smil);
+            setContent(content);
         }
 
-        this(Subject subject, Receiver receiver, Smil smil)
+        this(Subject subject, Receiver receiver, Content content)
         {
-            setSubject(subject);
-            setReceivers([receiver]);
-            setSmil(smil);
+            this(subject, [receiver], content);
         }
 
         Subject getSubject()
         {
             return subject;
-        }
-
-        Receiver[] getReceivers()
-        {
-            return receivers;
-        }
-
-        Smil getSmil()
-        {
-            return smil;
         }
 
     protected:
@@ -210,33 +228,20 @@ class Mms
 
             return this;
         }
-
-        Mms setReceivers(Receiver[] value)
-        {
-            receivers = value;
-
-            return this;
-        }
-
-        Mms setSmil(Smil value)
-        {
-            smil = value;
-
-            return this;
-        }
 }
 
 class Api
 {
     static const ushort PORT = 80;
 
-    static const string HOST                = "panel.***REMOVED***";
-    static const string PATH                = "sms.do";
-    static const string MMS_PATH            = "mms.do";
-    static const string METHOD              = "METHOD";
-    static const string USER_AGENT          = "SMSAPILib.d";
-    static const string PROTOCOL_NAME       = "HTTP";
-    static const string PROTOCOL_VERSION    = "1.1";
+    static const string
+        HOST                = "api.smsapi.pl",
+        SMS_PATH            = "sms.do",
+        MMS_PATH            = "mms.do",
+        METHOD              = "METHOD",
+        USER_AGENT          = "SMSAPILib.d",
+        PROTOCOL_NAME       = "HTTP",
+        PROTOCOL_VERSION    = "1.1";
 
     private:
         bool    test;
@@ -255,12 +260,7 @@ class Api
         {
             string content;
 
-            getStream().writeString(
-                getMethod() ~ " /" ~ getPath() ~ asQuery(sms) ~ " " ~
-                getProtocolName() ~ "/" ~ getProtocolVersion() ~ "\r\n"
-                "Host: "  ~ getHost() ~ "\r\n"
-                "User-Agent: " ~ getUserAgent() ~ "\r\n\r\n"
-            );
+            getStream().writeString(buildHeaders(sms));
             
             while (!getStream().eof()) {
                 content ~= getStream().readLine();
@@ -273,12 +273,7 @@ class Api
         {
             string content;
 
-            getStream().writeString(
-                getMethod() ~ " /" ~ getMmsPath() ~ asQuery(mms) ~ " " ~
-                getProtocolName() ~ "/" ~ getProtocolVersion() ~ "\r\n"
-                "Host: "  ~ getHost() ~ "\r\n"
-                "User-Agent: " ~ getUserAgent() ~ "\r\n\r\n"
-            );
+            getStream().writeString(buildHeaders(mms));
             
             while (!getStream().eof()) {
                 content ~= getStream().readLine();
@@ -288,41 +283,66 @@ class Api
         }
 
     protected:
-        string asQuery(Sms value)
+        string buildHeaders(Sms sms)
         {
-            string receivers;
-
-            foreach (Receiver receiver; value.getReceivers()) {
-                receivers ~= "&to[]=" ~ encode(text(receiver));
-            }
-
             return
-                "?username=" ~ encode(getUser().name) ~
-                "&password=" ~ encode(text(toHexString(getUser().hash))) ~
-                "&from=" ~  encode(text(value.getSender())) ~
-                receivers ~
-                "&format=json" ~
-                (value.getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ encode(value.getCharset()) : "") ~
-                (getTest() ? "&test=1" : "") ~
-                "&message=" ~ encode(text(value.getMessage()));
+                getMethod() ~ " /" ~ getSmsPath() ~ buildQuery(sms) ~ " " ~
+                getProtocolName() ~ "/" ~ getProtocolVersion() ~ "\r\n"
+                "Host: "  ~ getHost() ~ "\r\n"
+                "User-Agent: " ~ getUserAgent() ~ "\r\n\r\n";
         }
 
-        string asQuery(Mms value)
+        string buildHeaders(Mms mms)
+        {
+            return
+                getMethod() ~ " /" ~ getMmsPath() ~ buildQuery(mms) ~ " " ~
+                getProtocolName() ~ "/" ~ getProtocolVersion() ~ "\r\n"
+                "Host: "  ~ getHost() ~ "\r\n"
+                "User-Agent: " ~ getUserAgent() ~ "\r\n\r\n";
+        }
+
+        string buildQuery(Sms sms)
+        {
+            string receivers;
+            string from;
+
+            foreach (Receiver receiver; sms.getReceivers()) {
+                receivers ~= "&to[]=" ~ encode(text(receiver));
+            }
+
+            if (sms.getSender().name) {
+                from = text(sms.getSender());
+            } else {
+                from = sms.getType();
+            }
+
+            return
+                "?username=" ~ encode(getUser().name) ~
+                "&password=" ~ encode(text(toHexString(getUser().hash))) ~
+                "&from=" ~  encode(from) ~
+                receivers ~
+                "&format=json" ~
+                (sms.getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ encode(sms.getCharset()) : "") ~
+                (getTest() ? "&test=1" : "") ~
+                "&message=" ~ encode(text(sms.getContent()));
+        }
+
+        string buildQuery(Mms mms)
         {
             string receivers;
 
-            foreach (Receiver receiver; value.getReceivers()) {
+            foreach (Receiver receiver; mms.getReceivers()) {
                 receivers ~= "&to[]=" ~ encode(text(receiver));
             }
 
             return
                 "?username=" ~ encode(getUser().name) ~
                 "&password=" ~ encode(text(toHexString(getUser().hash))) ~
-                "&subject=" ~  encode(text(value.getSubject())) ~
+                "&subject=" ~  encode(text(mms.getSubject())) ~
                 receivers ~
                 "&format=json" ~
                 (getTest() ? "&test=1" : "") ~
-                "&smil=" ~ encode(text(value.getSmil()));
+                "&smil=" ~ encode(text(mms.getContent()));
         }
 
         User getUser()
@@ -340,9 +360,9 @@ class Api
             return METHOD;
         }
 
-        string getPath()
+        string getSmsPath()
         {
-            return PATH;
+            return SMS_PATH;
         }
 
         string getMmsPath()
