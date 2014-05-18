@@ -1,3 +1,10 @@
+EXAMPLE USAGE:
+
+`rdmd example.d sms username password sender receiver content`
+
+`rdmd example.d mms username password subject receiver`
+
+
 TODO:
  * add docs
  * add tests
