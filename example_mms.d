@@ -1,6 +1,6 @@
 #!/usr/bin/env rdmd
 
-import SMSAPILib : Api, Mms, Receiver, Smil, Subject, User;
+import SMSAPILib : Api, Content, Mms, Receiver, Subject, User;
 import std.stdio : writeln;
 
 void main(string[] args)
@@ -10,8 +10,8 @@ void main(string[] args)
             .send(
                 new Mms(
                     Subject("Test"),
-                    Receiver(790216004),
-                    Smil(
+                    Receiver(123456789),
+                    Content(
                         `<smil>
                             <head>
                                 <layout>
@@ -21,7 +21,7 @@ void main(string[] args)
                             </head>
                             <body>
                                 <par dur="5000ms">
-                                    <img src="http://www.smsapi.pl/media/mms.jpg" region="img" />
+                                    <img src="http://www.smsapi.pl/assets/img/mms.jpg" region="img" />
                                 </par>
                             </body>
                         </smil>`
