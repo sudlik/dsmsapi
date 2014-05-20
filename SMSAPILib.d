@@ -26,6 +26,11 @@ enum TYPE {
     WAY = "2Way",
 }
 
+enum HOST {
+    PLAIN_1 = "api.smsapi.pl",
+    PLAIN_2 = "api2.smsapi.pl",
+}
+
 struct Sender
 {
     string name;
@@ -235,7 +240,6 @@ class Api
     static const ushort PORT = 80;
 
     static const string
-        HOST                = "api.smsapi.pl",
         SMS_PATH            = "sms.do",
         MMS_PATH            = "mms.do",
         METHOD              = "METHOD",
@@ -245,13 +249,15 @@ class Api
 
     private:
         bool    test;
+        HOST    host;
         Stream  stream;
         User    user;
 
     public:
-        this(User user, bool test = false)
+        this(User user, HOST host, bool test = false)
         {
             setUser(user);
+            setHost(host);
             setTest(test);
             setStream(createStream(getHost(), getPort()));
         }
@@ -372,7 +378,7 @@ class Api
 
         string getHost()
         {
-            return HOST;
+            return host;
         }
 
         ushort getPort()
@@ -405,6 +411,13 @@ class Api
         Api setTest(bool value)
         {
             test = value;
+
+            return this;
+        }
+
+        Api setHost(HOST value)
+        {
+            host = value;
 
             return this;
         }
