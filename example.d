@@ -1,7 +1,7 @@
 #!/usr/bin/env rdmd
 
 import std.conv     : to;
-import SMSAPILib    : Api, Content, Mms, Receiver, Response, Sender, Sms, Subject, TYPE, User;
+import SMSAPILib    : Api, Content, HOST, Mms, Receiver, Response, Sender, Sms, Subject, TYPE, User;
 import std.stdio    : writeln;
 import std.c.stdlib : exit;
 import std.file     : readText;
@@ -15,7 +15,7 @@ void main(string[] args)
     Api         api;
 
     if (args.length == 6 || args.length == 7) {
-        api         = new Api(User(args[2], args[3]), true);
+        api         = new Api(User(args[2], args[3]), HOST.PLAIN_1, true);
         receiver    = Receiver(to!uint(args[5]));
 
         switch (args[1]) {
@@ -41,7 +41,7 @@ void main(string[] args)
                 break;
             case "mms":
                 if (args.length == 6) {
-                    reponse = api.send(new Mms(Subject(args[4]), receiver, Content("mms.smil")));
+                    reponse = api.send(new Mms(Subject(args[4]), receiver, Content(readText("mms.smil"))));
                 } else {
                     writeln("The program expects 5 arguments for 'mms'");
                     exit(-1);
