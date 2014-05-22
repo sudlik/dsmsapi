@@ -235,14 +235,107 @@ class Mms : Message
         }
 }
 
+interface Method
+{
+    string getPath();
+}
+
+class SendSms : Method
+{
+    static const string PATH = "sms.do";
+
+    private Sms sms;
+
+    public:
+        this(Sms sms)
+        {
+            setSms(sms);
+        }
+
+        string getPath()
+        {
+            string receivers;
+            string from;
+
+            foreach (Receiver receiver; getSms().getReceivers()) {
+                receivers ~= "&to[]=" ~ encode(text(receiver));
+            }
+
+            if (getSms().getSender().name) {
+                from = text(sms.getSender());
+            } else {
+                from = getSms().getType();
+            }
+
+            return
+                PATH ~
+                "?from=" ~  encode(from) ~
+                receivers ~
+                (getSms().getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ encode(getSms().getCharset()) : "") ~
+                "&message=" ~ encode(text(getSms().getContent()));
+        }
+
+    protected:
+        Sms getSms()
+        {
+            return sms;
+        }
+
+        SendSms setSms(Sms value)
+        {
+            sms = value;
+
+            return this;
+        }
+}
+
+class SendMms : Method
+{
+    static const string PATH = "mms.do";
+
+    private Mms mms;
+
+    public:
+        this(Mms mms)
+        {
+            setMms(mms);
+        }
+
+        string getPath()
+        {
+            string receivers;
+
+            foreach (Receiver receiver; getMms().getReceivers()) {
+                receivers ~= "&to[]=" ~ encode(text(receiver));
+            }
+
+            return
+                PATH ~
+                "?subject=" ~  encode(text(mms.getSubject())) ~
+                receivers ~
+                "&smil=" ~ encode(text(mms.getContent()));
+        }
+
+    protected:
+        Mms getMms()
+        {
+            return mms;
+        }
+
+        SendMms setMms(Mms value)
+        {
+            mms = value;
+
+            return this;
+        }
+}
+
 class Api
 {
     static const ushort PORT = 80;
 
     static const string
-        SMS_PATH            = "sms.do",
-        MMS_PATH            = "mms.do",
-        METHOD              = "METHOD",
+        METHOD              = "POST",
         USER_AGENT          = "SMSAPILib.d",
         PROTOCOL_NAME       = "HTTP",
         PROTOCOL_VERSION    = "1.1";
@@ -262,24 +355,11 @@ class Api
             setStream(createStream(getHost(), getPort()));
         }
 
-        Response send(Sms sms)
+        Response execute(Method method)
         {
             string content;
 
-            getStream().writeString(buildHeaders(sms));
-            
-            while (!getStream().eof()) {
-                content ~= getStream().readLine();
-            }
-
-            return Response(content);
-        }
-
-        Response send(Mms mms)
-        {
-            string content;
-
-            getStream().writeString(buildHeaders(mms));
+            getStream().writeString(buildHeaders(method.getPath()));
             
             while (!getStream().eof()) {
                 content ~= getStream().readLine();
@@ -289,66 +369,18 @@ class Api
         }
 
     protected:
-        string buildHeaders(Sms sms)
+        string buildHeaders(string path)
         {
             return
-                getMethod() ~ " /" ~ getSmsPath() ~ buildQuery(sms) ~ " " ~
+                getMethod() ~ " /" ~ path ~
+                "&username=" ~ encode(getUser().name) ~
+                "&password=" ~ encode(text(toHexString(getUser().hash))) ~
+                "&format=json" ~
+                (getTest() ? "&test=1" : "") ~
+                " " ~
                 getProtocolName() ~ "/" ~ getProtocolVersion() ~ "\r\n"
                 "Host: "  ~ getHost() ~ "\r\n"
                 "User-Agent: " ~ getUserAgent() ~ "\r\n\r\n";
-        }
-
-        string buildHeaders(Mms mms)
-        {
-            return
-                getMethod() ~ " /" ~ getMmsPath() ~ buildQuery(mms) ~ " " ~
-                getProtocolName() ~ "/" ~ getProtocolVersion() ~ "\r\n"
-                "Host: "  ~ getHost() ~ "\r\n"
-                "User-Agent: " ~ getUserAgent() ~ "\r\n\r\n";
-        }
-
-        string buildQuery(Sms sms)
-        {
-            string receivers;
-            string from;
-
-            foreach (Receiver receiver; sms.getReceivers()) {
-                receivers ~= "&to[]=" ~ encode(text(receiver));
-            }
-
-            if (sms.getSender().name) {
-                from = text(sms.getSender());
-            } else {
-                from = sms.getType();
-            }
-
-            return
-                "?username=" ~ encode(getUser().name) ~
-                "&password=" ~ encode(text(toHexString(getUser().hash))) ~
-                "&from=" ~  encode(from) ~
-                receivers ~
-                "&format=json" ~
-                (sms.getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ encode(sms.getCharset()) : "") ~
-                (getTest() ? "&test=1" : "") ~
-                "&message=" ~ encode(text(sms.getContent()));
-        }
-
-        string buildQuery(Mms mms)
-        {
-            string receivers;
-
-            foreach (Receiver receiver; mms.getReceivers()) {
-                receivers ~= "&to[]=" ~ encode(text(receiver));
-            }
-
-            return
-                "?username=" ~ encode(getUser().name) ~
-                "&password=" ~ encode(text(toHexString(getUser().hash))) ~
-                "&subject=" ~  encode(text(mms.getSubject())) ~
-                receivers ~
-                "&format=json" ~
-                (getTest() ? "&test=1" : "") ~
-                "&smil=" ~ encode(text(mms.getContent()));
         }
 
         User getUser()
@@ -364,16 +396,6 @@ class Api
         string getMethod()
         {
             return METHOD;
-        }
-
-        string getSmsPath()
-        {
-            return SMS_PATH;
-        }
-
-        string getMmsPath()
-        {
-            return MMS_PATH;
         }
 
         string getHost()
