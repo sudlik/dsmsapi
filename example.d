@@ -27,24 +27,37 @@ void main(string[] args)
     Response    reponse;
     Sms         sms;
     Api         api;
+    bool        test;
 
-    if (args.length == 6 || args.length == 7) {
-        api         = new Api(User(args[2], args[3]), HOST.PLAIN_1, true);
-        receiver    = Receiver(to!uint(args[5]));
+    if (args.length == 7 || args.length == 8) {
+        switch (args[2]) {
+            case "test":
+                test = true;
+                break;
+            case "real":
+                test = false;
+                break;
+            default:
+                writeln("The program expects that second argument will be 'test' or 'real'");
+                exit(-1);
+        }
+
+        api         = new Api(User(args[3], args[4]), HOST.PLAIN_1, test);
+        receiver    = Receiver(to!uint(args[6]));
 
         switch (args[1]) {
             case "sms":
                 if (args.length == 7) {
-                    if (args[4] == "ECO" || args[4] == "2Way") {
-                        if (args[4] == "ECO") {
+                    if (args[5] == "ECO" || args[5] == "2Way") {
+                        if (args[5] == "ECO") {
                             type = TYPE.ECO;
                         } else {
                             type = TYPE.WAY;
                         }
 
-                        sms = new Sms(type, receiver, Content(args[6]));
+                        sms = new Sms(type, receiver, Content(args[7]));
                     } else {
-                        sms = new Sms(Sender(args[4]), receiver, Content(args[6]));
+                        sms = new Sms(Sender(args[5]), receiver, Content(args[7]));
                     }
 
                     reponse = api.execute(new SendSms(sms));
@@ -54,9 +67,9 @@ void main(string[] args)
                 }
                 break;
             case "mms":
-                if (args.length == 6) {
+                if (args.length == 7) {
                     reponse = api.execute(
-                        new SendMms(new Mms(Subject(args[4]), receiver, Content(readText("mms.smil"))))
+                        new SendMms(new Mms(Subject(args[5]), receiver, Content(readText("mms.smil"))))
                     );
                 } else {
                     writeln("The program expects 5 arguments for 'mms'");
