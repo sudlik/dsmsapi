@@ -1,14 +1,28 @@
-EXAMPLE USAGE:
+DSmsApi - SMSAPI API library written in D programming language
 
-`rdmd example.d sms test|real username password sender receiver content`
+Example:
+```d
+import smsapid.core : Content, Receiver;
+import smsapid.api  : Api, HOST, User;
+import smsapid.sms  : SendSms, Sms, TYPE;
 
-`rdmd example.d mms test|real username password subject receiver`
+void main()
+{
+    User user = User("username", "password");
+    Api api = new Api(user, HOST.PLAIN_1, true);
+    Receiver receiver = Receiver(123456789);
+    Content content = Content("Hello world!");
+    Sms sms = new Sms(TYPE.ECO, receiver, content);
+    SendSms sendSms = new SendSms(sms);
+    api.execute(sendSms);
+}
+```
 
-
-TODO:
+ToDo:
  * add docs
  * add tests
  * implement the rest of the API (smsapi.pl)
  * add support for the hqsms.com
  * add multithreading
  * add support for ssl
+ * add more examples
