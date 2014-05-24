@@ -1,7 +1,7 @@
-DSmsApi - SMSAPI API library written in D programming language
+DSmsApi - SMSAPI REST API ([smsapi.pl/rest](http://smsapi.pl/rest)) written in D programming language ([dlang.org](http://dlang.org))
 
 Example:
-```d
+``` d
 import smsapid.core : Content, Receiver;
 import smsapid.api  : Api, HOST, User;
 import smsapid.sms  : SendSms, Sms, TYPE;
