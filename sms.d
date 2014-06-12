@@ -38,6 +38,7 @@ class Sms : Message
 {
     private:
         string  charset;
+        bool    normalize = false;
         Sender  sender;
         TYPE    type;
 
@@ -66,6 +67,18 @@ class Sms : Message
         this(TYPE type, Receiver receiver, Content content, CHARSET charset = CHARSET.DEFAULT)
         {
             this(type, [receiver], content, charset);
+        }
+
+        bool getNormalize()
+        {
+            return normalize;
+        }
+
+        Sms setNormalize(bool value)
+        {
+            normalize = value;
+            
+            return this;
         }
 
         Sender getSender()
@@ -138,6 +151,7 @@ class SendSms : Method
                 "?from=" ~  encode(from) ~
                 receivers ~
                 (getSms().getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ encode(getSms().getCharset()) : "") ~
+                (getSms().getNormalize() ? "&normalize=1" : "") ~
                 "&message=" ~ encode(text(getSms().getContent()));
         }
 
