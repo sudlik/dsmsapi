@@ -1,13 +1,16 @@
 # DSmsApi
 ## About
 Client for SMSAPI REST API ([smsapi.pl/rest](http://smsapi.pl/rest)) written in D programming language ([dlang.org](http://dlang.org))
-## Example
+## Examples
+### Simple
 ``` d
 #!/usr/bin/env rdmd
 
+import std.stdio : writeln;
+
 import dsmsapi.core : Content, Receiver;
 import dsmsapi.api  : Api, HOST, User;
-import dsmsapi.sms  : SendSms, Sms, TYPE;
+import dsmsapi.sms  : CHARSET, SendSms, Sms, TYPE;
 
 void main()
 {
@@ -16,9 +19,35 @@ void main()
     Receiver receiver = Receiver(555012345);
     Content content = Content("Hello world!");
     Sms sms = new Sms(TYPE.ECO, receiver, content);
+    sms.setCharset(CHARSET.UTF_8);
     sms.setNormalize(true);
     SendSms sendSms = new SendSms(sms);
-    api.execute(sendSms);
+    writeln(api.execute(sendSms).content);
+}
+```
+### Pattern usage
+``` d
+#!/usr/bin/env rdmd
+
+import std.stdio : writeln;
+
+import dsmsapi.core : Content, Receiver;
+import dsmsapi.api  : Api, HOST, User;
+import dsmsapi.sms  : CHARSET, SendSms, Sms, Parameters, Pattern, TYPE;
+
+void main()
+{
+    User user = User("m.sudol@smsapi.pl", "smsapi-2014");
+    Api api = new Api(user, HOST.LOCALHOST);
+    Receiver receiver = Receiver(790216004);
+    Pattern pattern = new Pattern("Testowa nazwa");
+    pattern.setParameters(Parameters("a", "b", "c", "d"));
+    pattern.setSingle(true);
+    Sms sms = new Sms(TYPE.ECO, receiver, pattern);
+    sms.setCharset(CHARSET.UTF_8);
+    sms.setNormalize(true);
+    SendSms sendSms = new SendSms(sms);
+    writeln(api.execute(sendSms).content);
 }
 ```
 ## ToDo
