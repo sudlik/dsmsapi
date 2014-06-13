@@ -19,7 +19,7 @@ enum CHARSET : string {
     WINDOWS_1251    = "windows-1251",
 }
 
-enum TYPE {
+enum TYPE : string {
     ECO = "ECO",
     WAY = "2Way",
 }
@@ -34,11 +34,72 @@ struct Sender
     }
 }
 
+struct Parameters
+{
+    string
+        first,
+        second,
+        third,
+        fourth;
+}
+
+class Pattern
+{
+    private:
+        string name;
+        Parameters parameters;
+        bool single;
+
+    public:
+        this(string name)
+        {
+            setName(name);
+        }
+
+        bool getSingle()
+        {
+            return single;
+        }
+
+        Pattern setSingle(bool value)
+        {
+            single = value;
+
+            return this;
+        }
+
+        Parameters getParameters()
+        {
+            return parameters;
+        }
+        
+        Pattern setParameters(Parameters value)
+        {
+            parameters = value;
+
+            return this;
+        }
+
+        string getName()
+        {
+            return name;
+        }
+
+    protected:
+        Pattern setName(string value)
+        {
+            name = value;
+
+            return this;
+        }
+}
+
 class Sms : Message
 {
     private:
         CHARSET charset = CHARSET.DEFAULT;
         bool    normalize = false;
+        Pattern pattern;
         Sender  sender;
         TYPE    type;
 
@@ -50,6 +111,11 @@ class Sms : Message
             setContent(content);
         }
 
+        this(Sender sender, Receiver receiver, Content content)
+        {
+            this(sender, [receiver], content);
+        }
+
         this(TYPE type, Receiver[] receivers, Content content)
         {
             setType(type);
@@ -57,14 +123,33 @@ class Sms : Message
             setContent(content);
         }
 
-        this(Sender sender, Receiver receiver, Content content)
-        {
-            this(sender, [receiver], content);
-        }
-
         this(TYPE type, Receiver receiver, Content content)
         {
             this(type, [receiver], content);
+        }
+
+        this(Sender sender, Receiver[] receivers, Pattern pattern)
+        {
+            setSender(sender);
+            setReceivers(receivers);
+            setPattern(pattern);
+        }
+
+        this(Sender sender, Receiver receiver, Pattern pattern)
+        {
+            this(sender, [receiver], pattern);
+        }
+
+        this(TYPE type, Receiver[] receivers, Pattern pattern)
+        {
+            setType(type);
+            setReceivers(receivers);
+            setPattern(pattern);
+        }
+
+        this(TYPE type, Receiver receiver, Pattern pattern)
+        {
+            this(type, [receiver], pattern);
         }
 
         bool getNormalize()
@@ -101,6 +186,11 @@ class Sms : Message
             return type;
         }
 
+        Pattern getPattern()
+        {
+            return pattern;
+        }
+
     protected:
         Sms setSender(Sender value)
         {
@@ -112,6 +202,13 @@ class Sms : Message
         Sms setType(TYPE value)
         {
             type = value;
+
+            return this;
+        }
+
+        Sms setPattern(Pattern value)
+        {
+            pattern = value;
 
             return this;
         }
@@ -131,12 +228,11 @@ class SendSms : Method
 
         string getPath()
         {
-            string receivers;
+            Content content = getSms().getContent();
             string from;
-
-            foreach (Receiver receiver; getSms().getReceivers()) {
-                receivers ~= "&to[]=" ~ encode(text(receiver));
-            }
+            Pattern pattern = getSms().getPattern();
+            Parameters parameters = pattern.getParameters();
+            string receivers;
 
             if (getSms().getSender().name) {
                 from = text(sms.getSender());
@@ -144,13 +240,32 @@ class SendSms : Method
                 from = getSms().getType();
             }
 
-            return
-                PATH ~
-                "?from=" ~  encode(from) ~
-                receivers ~
-                (getSms().getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ encode(getSms().getCharset()) : "") ~
-                (getSms().getNormalize() ? "&normalize=1" : "") ~
-                "&message=" ~ encode(text(getSms().getContent()));
+            foreach (Receiver receiver; getSms().getReceivers()) {
+                receivers ~= "&to[]=" ~ encode(text(receiver));
+            }
+
+            if (text(content) != string.init) {
+                return
+                    PATH ~
+                    "?from=" ~  encode(from) ~
+                    receivers ~
+                    (getSms().getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ encode(getSms().getCharset()) : "") ~
+                    (getSms().getNormalize() ? "&normalize=1" : "") ~
+                    "&message=" ~ encode(text(content));
+            } else {
+                return
+                    PATH ~
+                    "?from=" ~  encode(from) ~
+                    receivers ~
+                    (parameters.first ? "&param1=" ~ encode(parameters.first) : "") ~
+                    (parameters.second ? "&param2=" ~ encode(parameters.second) : "") ~
+                    (parameters.third ? "&param3=" ~ encode(parameters.third) : "") ~
+                    (parameters.fourth ? "&param4=" ~ encode(parameters.fourth) : "") ~
+                    (getSms().getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ encode(getSms().getCharset()) : "") ~
+                    (getSms().getNormalize() ? "&normalize=1" : "") ~
+                    (pattern.getSingle() ? "&single=1" : "") ~
+                    "&template=" ~ encode(pattern.getName());
+            }
         }
 
     protected:
