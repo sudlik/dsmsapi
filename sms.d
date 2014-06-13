@@ -37,36 +37,34 @@ struct Sender
 class Sms : Message
 {
     private:
-        string  charset;
+        CHARSET charset = CHARSET.DEFAULT;
         bool    normalize = false;
         Sender  sender;
         TYPE    type;
 
     public:
-        this(Sender sender, Receiver[] receivers, Content content, CHARSET charset = CHARSET.DEFAULT)
+        this(Sender sender, Receiver[] receivers, Content content)
         {
             setSender(sender);
             setReceivers(receivers);
             setContent(content);
-            setCharset(charset);
         }
 
-        this(TYPE type, Receiver[] receivers, Content content, CHARSET charset = CHARSET.DEFAULT)
+        this(TYPE type, Receiver[] receivers, Content content)
         {
             setType(type);
             setReceivers(receivers);
             setContent(content);
-            setCharset(charset);
         }
 
-        this(Sender sender, Receiver receiver, Content content, CHARSET charset = CHARSET.DEFAULT)
+        this(Sender sender, Receiver receiver, Content content)
         {
-            this(sender, [receiver], content, charset);
+            this(sender, [receiver], content);
         }
 
-        this(TYPE type, Receiver receiver, Content content, CHARSET charset = CHARSET.DEFAULT)
+        this(TYPE type, Receiver receiver, Content content)
         {
-            this(type, [receiver], content, charset);
+            this(type, [receiver], content);
         }
 
         bool getNormalize()
@@ -81,14 +79,21 @@ class Sms : Message
             return this;
         }
 
+        CHARSET getCharset()
+        {
+            return charset;
+        }
+
+        Sms setCharset(CHARSET value)
+        {
+            charset = value;
+            
+            return this;
+        }
+
         Sender getSender()
         {
             return sender;
-        }
-
-        string getCharset()
-        {
-            return charset;
         }
 
         TYPE getType()
@@ -100,13 +105,6 @@ class Sms : Message
         Sms setSender(Sender value)
         {
             sender = value;
-
-            return this;
-        }
-
-        Sms setCharset(string value)
-        {
-            charset = value;
 
             return this;
         }
