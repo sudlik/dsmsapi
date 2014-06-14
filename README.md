@@ -15,7 +15,8 @@ import dsmsapi.sms  : CHARSET, SendSms, Sms, TYPE;
 void main()
 {
     User user = User("username", "password");
-    Api api = new Api(user, HOST.PLAIN_1, true);
+    Api api = new Api(user, HOST.PLAIN_1);
+    api.setTest(true);
     Receiver receiver = Receiver(555012345);
     Content content = Content("Hello world!");
     Sms sms = new Sms(TYPE.ECO, receiver, content);
@@ -38,7 +39,8 @@ import dsmsapi.sms  : CHARSET, SendSms, Sms, Parameters, Pattern, TYPE;
 void main()
 {
     User user = User("***REMOVED***", "***REMOVED***");
-    Api api = new Api(user, HOST.***REMOVED***);
+    Api api = new Api(user, HOST.PLAIN_1);
+    api.setTest(true);
     Receiver receiver = Receiver(***REMOVED***);
     Pattern pattern = new Pattern("Testowa nazwa");
     pattern.setParameters(Parameters("a", "b", "c", "d"));

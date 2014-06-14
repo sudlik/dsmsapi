@@ -1,9 +1,17 @@
 module dsmsapi.mms;
 
-import dsmsapi.core : Content, Message, Method, Receiver;
+import dsmsapi.core :
+    Content,
+    Message,
+    Method,
+    ParameterFactory,
+    PARAMETER,
+    PATH,
+    Receiver,
+    RequestBuilder,
+    RequestBuilderFactory;
 
-import std.conv : text, to;
-import std.uri  : encode;
+import std.conv : text;
 
 struct Subject
 {
@@ -48,29 +56,39 @@ class Mms : Message
 
 class SendMms : Method
 {
-    static const string PATH = "mms.do";
+    static const dsmsapi.core.PATH PATH = PATH.MMS;
 
-    private Mms mms;
+    private:
+        Mms mms;
+        RequestBuilder requestBuilder;
+
+        ParameterFactory parameterFactory = new ParameterFactory;
 
     public:
         this(Mms mms)
         {
             setMms(mms);
+            setRequestBuilder((new RequestBuilderFactory).create());
         }
 
-        string getPath()
+        RequestBuilder getRequest()
         {
-            string receivers;
+            string[] receivers;
+            
+            Mms mms = getMms();
 
-            foreach (Receiver receiver; getMms().getReceivers()) {
-                receivers ~= "&to[]=" ~ encode(text(receiver));
+            RequestBuilder requestBuilder = getRequestBuilder().setPath(PATH);
+
+            foreach (Receiver receiver; mms.getReceivers()) {
+                receivers[] = text(receiver);
             }
 
-            return
-                PATH ~
-                "?subject=" ~  encode(text(mms.getSubject())) ~
-                receivers ~
-                "&smil=" ~ encode(text(mms.getContent()));
+            requestBuilder
+                .addParameter(parameterFactory.create(PARAMETER.TO, receivers))
+                .addParameter(parameterFactory.create(PARAMETER.SUBJECT, text(mms.getSubject())))
+                .addParameter(parameterFactory.create(PARAMETER.SMIL, text(mms.getContent())));
+
+            return requestBuilder;
         }
 
     protected:
@@ -79,10 +97,27 @@ class SendMms : Method
             return mms;
         }
 
-        SendMms setMms(Mms value)
+        SendMms setMms(Mms mms)
         {
-            mms = value;
+            this.mms = mms;
 
             return this;
+        }
+
+        RequestBuilder getRequestBuilder()
+        {
+            return requestBuilder;
+        }
+
+        SendMms setRequestBuilder(RequestBuilder requestBuilder)
+        {
+            this.requestBuilder = requestBuilder;
+
+            return this;
+        }
+
+        ParameterFactory getParameterFactory()
+        {
+            return parameterFactory;
         }
 }
