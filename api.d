@@ -36,7 +36,7 @@ struct User
 
 enum FORMAT
 {
-    JSON = "json";
+    JSON = "json",
 }
 
 class Api
@@ -46,7 +46,7 @@ class Api
         dsmsapi.core.METHOD METHOD      = METHOD.POST;
         dsmsapi.core.AGENT AGENT        = AGENT.DSMSAPI;
         dsmsapi.core.PROTOCOL PROTOCOL  = PROTOCOL.HTTP_11;
-        dsmsapi.core.FORMAT FORMAT      = FORMAT.JSON;
+        FORMAT RETURN_FORMAT            = FORMAT.JSON;
     }
 
     private:
@@ -75,7 +75,7 @@ class Api
             ParameterFactory parameterFactory = getParameterFactory();
 
             RequestBuilder requestBuilder = method
-                .getRequest()
+                .getBuilder()
                 .setHost(getHost())
                 .setMethod(METHOD)
                 .setProtocol(PROTOCOL)
@@ -83,7 +83,7 @@ class Api
                 .setPort(PORT)
                 .addParameter(parameterFactory.create(PARAMETER.USERNAME, getUser().name))
                 .addParameter(parameterFactory.create(PARAMETER.PASSWORD, text(toHexString(getUser().hash))))
-                .addParameter(parameterFactory.create(PARAMETER.FORMAT, FORMAT));
+                .addParameter(parameterFactory.create(PARAMETER.FORMAT, RETURN_FORMAT));
 
             if (getTest()) {
                 requestBuilder.addParameter(parameterFactory.create(PARAMETER.TEST, "1"));

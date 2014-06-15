@@ -44,16 +44,16 @@ abstract class Message
         }
 
     protected:
-        Message setReceivers(Receiver[] value)
+        Message setReceivers(Receiver[] receivers)
         {
-            receivers = value;
+            this.receivers = receivers;
 
             return this;
         }
 
-        Message setContent(Content value)
+        Message setContent(Content content)
         {
-            content = value;
+            this.content = content;
 
             return this;
         }
@@ -61,7 +61,7 @@ abstract class Message
 
 interface Method
 {
-    RequestBuilder getRequest();
+    RequestBuilder getBuilder();
 }
 
 enum HOST
@@ -138,12 +138,12 @@ class Parameter
 
     string getName()
     {
-        return value;
+        return name;
     }
 
-    Parameter setName(string value)
+    Parameter setName(string name)
     {
-        name = value;
+        this.name = name;
 
         return this;
     }
@@ -168,7 +168,7 @@ class Parameter
     Parameter setValues(string[] vals)
     {
         foreach (string val; vals) {
-            values[] = encode(val);
+            values ~= encode(val);
         }
 
         return this;
@@ -231,7 +231,7 @@ class RequestBuilder
 
         RequestBuilder addParameter(Parameter parameter)
         {
-            parameters[] = parameter;
+            parameters ~= parameter;
 
             return this;
         }
@@ -245,14 +245,14 @@ class RequestBuilder
             foreach (int i, Parameter parameter; getParameters()) {
                 if (!empty(parameter.getValues())) {
                     foreach (string value; parameter.getValues()) {
-                        headers ~= (i == 1 ? "?" : "&") ~ parameter.getName() ~ "[]=" ~ value;
+                        headers ~= (i == 0 ? "?" : "&") ~ parameter.getName() ~ "[]=" ~ value;
                     }
                 } else {
-                    headers ~= (i == 1 ? "?" : "&") ~ parameter.getName() ~ "=" ~ parameter.getValue();
+                    headers ~= (i == 0 ? "?" : "&") ~ parameter.getName() ~ "=" ~ parameter.getValue();
                 }
             }
 
-            return (new RequestFactory).create(
+            return new RequestFactory().create(
                 getHost(),
                 getPort(),
                 headers ~ " " ~ getProtocol() ~ "\r\nHost: "  ~ getHost() ~ "\r\nUser-Agent: " ~ getAgent() ~ "\r\n\r\n"
@@ -300,39 +300,40 @@ class Request
 {
     private:
         string headers;
-        SocketStream stream;
+        SocketStream socketStream;
 
     public:
         this(HOST host, ushort port, string headers)
         {
-            setStream((new SocketStreamFactory).create(host, port));
+            setSocketStream(new SocketStreamFactory().create(host, port));
             setHeaders(headers);
         }
 
         string send()
         {
             string content;
+            SocketStream socketstream = getSocketStream();
 
-            getStream().writeString(getHeaders());
+            socketstream.writeString(getHeaders());
             
-            while (!getStream().eof()) {
-                content ~= getStream().readLine();
+            while (!socketstream.eof()) {
+                content ~= socketstream.readLine();
             }
 
             return content;
         }
         
     protected:
-        Request setStream(SocketStream value)
+        Request setSocketStream(SocketStream socketStream)
         {
-            stream = value;
+            this.socketStream = socketStream;
 
             return this;
         }
 
-        SocketStream getStream()
+        SocketStream getSocketStream()
         {
-            return stream;
+            return socketStream;
         }
 
         Request setHeaders(string headers)

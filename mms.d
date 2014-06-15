@@ -46,9 +46,9 @@ class Mms : Message
         }
 
     protected:
-        Mms setSubject(Subject value)
+        Mms setSubject(Subject subject)
         {
-            subject = value;
+            this.subject = subject;
 
             return this;
         }
@@ -68,10 +68,10 @@ class SendMms : Method
         this(Mms mms)
         {
             setMms(mms);
-            setRequestBuilder((new RequestBuilderFactory).create());
+            setRequestBuilder(new RequestBuilderFactory().create());
         }
 
-        RequestBuilder getRequest()
+        RequestBuilder getBuilder()
         {
             string[] receivers;
             
@@ -80,7 +80,7 @@ class SendMms : Method
             RequestBuilder requestBuilder = getRequestBuilder().setPath(PATH);
 
             foreach (Receiver receiver; mms.getReceivers()) {
-                receivers[] = text(receiver);
+                receivers ~= text(receiver);
             }
 
             requestBuilder

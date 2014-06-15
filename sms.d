@@ -66,9 +66,9 @@ class Pattern
             return single;
         }
 
-        Pattern setSingle(bool value)
+        Pattern setSingle(bool single)
         {
-            single = value;
+            this.single = single;
 
             return this;
         }
@@ -78,9 +78,9 @@ class Pattern
             return parameters;
         }
         
-        Pattern setParameters(Parameters value)
+        Pattern setParameters(Parameters parameters)
         {
-            parameters = value;
+            this.parameters = parameters;
 
             return this;
         }
@@ -91,9 +91,9 @@ class Pattern
         }
 
     protected:
-        Pattern setName(string value)
+        Pattern setName(string name)
         {
-            name = value;
+            this.name = name;
 
             return this;
         }
@@ -162,9 +162,9 @@ class Sms : Message
             return normalize;
         }
 
-        Sms setNormalize(bool value)
+        Sms setNormalize(bool normalize)
         {
-            normalize = value;
+            this.normalize = normalize;
             
             return this;
         }
@@ -174,9 +174,9 @@ class Sms : Message
             return charset;
         }
 
-        Sms setCharset(CHARSET value)
+        Sms setCharset(CHARSET charset)
         {
-            charset = value;
+            this.charset = charset;
             
             return this;
         }
@@ -197,23 +197,23 @@ class Sms : Message
         }
 
     protected:
-        Sms setSender(Sender value)
+        Sms setSender(Sender sender)
         {
-            sender = value;
+            this.sender = sender;
 
             return this;
         }
 
-        Sms setType(TYPE value)
+        Sms setType(TYPE type)
         {
-            type = value;
+            this.type = type;
 
             return this;
         }
 
-        Sms setPattern(Pattern value)
+        Sms setPattern(Pattern pattern)
         {
-            pattern = value;
+            this.pattern = pattern;
 
             return this;
         }
@@ -233,17 +233,17 @@ class SendSms : Method
         this(Sms sms)
         {
             setSms(sms);
-            setRequestBuilder((new RequestBuilderFactory).create());
+            setRequestBuilder(new RequestBuilderFactory().create());
         }
 
-        RequestBuilder getRequest()
+        RequestBuilder getBuilder()
         {
             string[] receivers;
+            Parameters parameters;
 
             Sms sms                             = getSms();
             Content content                     = sms.getContent();
             Pattern pattern                     = sms.getPattern();
-            Parameters parameters               = pattern.getParameters();
             CHARSET charset                     = sms.getCharset();
             ParameterFactory parameterFactory   = getParameterFactory();
 
@@ -256,7 +256,7 @@ class SendSms : Method
             }
 
             foreach (Receiver receiver; sms.getReceivers()) {
-                receivers[] = text(receiver);
+                receivers ~= text(receiver);
             }
 
             requestBuilder.addParameter(parameterFactory.create(PARAMETER.TO, receivers));
@@ -272,6 +272,8 @@ class SendSms : Method
             if (text(content) != string.init) {
                 requestBuilder.addParameter(parameterFactory.create(PARAMETER.MESSAGE, text(content)));
             } else {
+                parameters = pattern.getParameters();
+
                 requestBuilder
                     .addParameter(parameterFactory.create(PARAMETER.PARAM_1, parameters.first))
                     .addParameter(parameterFactory.create(PARAMETER.PARAM_2, parameters.second))
@@ -293,7 +295,7 @@ class SendSms : Method
             return sms;
         }
 
-        SendSms setSms(Sms value)
+        SendSms setSms(Sms sms)
         {
             this.sms = sms;
 
