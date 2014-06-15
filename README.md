@@ -41,7 +41,7 @@ void main()
     User user = User("username", "password");
     Api api = new Api(user, HOST.PLAIN_1);
     api.setTest(true);
-    Receiver receiver = Receiver(***REMOVED***);
+    Receiver receiver = Receiver(555012345);
     Pattern pattern = new Pattern("Testowa nazwa");
     pattern.setParameters(Parameters("a", "b", "c", "d"));
     pattern.setSingle(true);
