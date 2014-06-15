@@ -38,7 +38,7 @@ import dsmsapi.sms  : CHARSET, SendSms, Sms, Parameters, Pattern, TYPE;
 
 void main()
 {
-    User user = User("***REMOVED***", "***REMOVED***");
+    User user = User("username", "password");
     Api api = new Api(user, HOST.PLAIN_1);
     api.setTest(true);
     Receiver receiver = Receiver(***REMOVED***);
