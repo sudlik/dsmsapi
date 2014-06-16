@@ -169,5 +169,9 @@ void main()
 - [ ] idx
 
 ## ToDo
- * docs
- * tests
+ * docs (http://dlang.org/ddoc.html)
+ * tests (http://dlang.org/unittest.html)
+ * dstyle (http://dlang.org/dstyle.html)
+ * installation instruction
+ * dub (http://code.dlang.org)
+ * versions tags
