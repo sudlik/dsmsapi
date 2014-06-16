@@ -4,23 +4,24 @@ Client for SMSAPI REST API ([smsapi.pl/rest](http://smsapi.pl/rest)),
 written in D programming language ([dlang.org](http://dlang.org))
 ## Examples
 ### SMS
-``` d
+``` D
 #!/usr/bin/env rdmd
 
 import std.stdio : writeln;
 
 import dsmsapi.core : Content, Receiver;
-import dsmsapi.api  : Api, HOST, User;
+import dsmsapi.api  : Api, HOST, Response, User;
 import dsmsapi.sms  : CHARSET, SendSms, Sms, TYPE;
 
 void main()
 {
-    Sms sms;
     SendSms sendSms;
+    Response response;
+    Sms sms;
 
-    User user           = User("username", "password");
-    Receiver receiver   = Receiver(555012345);
     Content content     = Content("Hello world!");
+    Receiver receiver   = Receiver(555012345);
+    User user           = User("username", "password");
 
     Api api = new Api(user, HOST.PLAIN_1)
         .setTest(true);
@@ -31,35 +32,73 @@ void main()
 
     sendSms = new SendSms(sms);
 
-    writeln(api.execute(sendSms).content);
+    response = api.execute(sendSms);
+
+    writeln(response.content);
 }
 ```
 ### MMS
-...
+``` D
+#!/usr/bin/env rdmd
+
+import std.file     : readText;
+import std.stdio    : writeln;
+
+import dsmsapi.core : Content, Receiver;
+import dsmsapi.api  : Api, HOST, Response, User;
+import dsmsapi.mms  : SendMms, Mms, Subject;
+
+void main()
+{
+    Content content     = Content(readText("mms.smil"));
+    Receiver receiver   = Receiver(555012345);
+    Subject subject     = Subject("Test");
+    User user           = User("username", "password");
+    Mms mms             = new Mms(subject, receiver, content);
+    SendMms sendMms     = new SendMms(mms);
+
+    Api api = new Api(user, HOST.PLAIN_1)
+        .setTest(true);
+
+    Response response = api
+        .execute(sendMms);
+
+    writeln(response.content);
+}
+```
 ### Pattern
-``` d
+``` D
 #!/usr/bin/env rdmd
 
 import std.stdio : writeln;
 
 import dsmsapi.core : Content, Receiver;
-import dsmsapi.api  : Api, HOST, User;
+import dsmsapi.api  : Api, HOST, Response, User;
 import dsmsapi.sms  : CHARSET, SendSms, Sms, Parameters, Pattern, TYPE;
 
 void main()
 {
-    User user = User("username", "password");
-    Api api = new Api(user, HOST.PLAIN_1);
-    api.setTest(true);
-    Receiver receiver = Receiver(555012345);
-    Pattern pattern = new Pattern("Testowa nazwa");
-    pattern.setParameters(Parameters("a", "b", "c", "d"));
-    pattern.setSingle(true);
-    Sms sms = new Sms(TYPE.ECO, receiver, pattern);
-    sms.setCharset(CHARSET.UTF_8);
-    sms.setNormalize(true);
+    Content content         = Content("Hello world!");
+    Parameters parameters   = Parameters("a", "b", "c", "d");
+    Receiver receiver       = Receiver(555012345);
+    User user               = User("username", "password");
+
+    Pattern pattern = new Pattern("Testowa nazwa")
+        .setParameters(parameters)
+        .setSingle(true);
+
+    Sms sms = new Sms(TYPE.ECO, receiver, pattern)
+        .setCharset(CHARSET.UTF_8)
+        .setNormalize(true);
+
     SendSms sendSms = new SendSms(sms);
-    writeln(api.execute(sendSms).content);
+
+    Api api = new Api(user, HOST.PLAIN_1)
+        .setTest(true);
+
+    Response response = api.execute(sendSms);
+
+    writeln(response.content);
 }
 ```
 ## Features
