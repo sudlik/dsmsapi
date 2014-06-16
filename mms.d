@@ -1,5 +1,7 @@
 module dsmsapi.mms;
 
+import std.conv : text;
+
 import dsmsapi.core :
     Content,
     Message,
@@ -10,8 +12,6 @@ import dsmsapi.core :
     Receiver,
     RequestBuilder,
     RequestBuilderFactory;
-
-import std.conv : text;
 
 struct Subject
 {

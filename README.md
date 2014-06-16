@@ -19,9 +19,9 @@ void main()
     Response response;
     Sms sms;
 
-    Content content     = Content("Hello world!");
-    Receiver receiver   = Receiver(555012345);
-    User user           = User("username", "password");
+    Content content   = Content("Hello world!");
+    Receiver receiver = Receiver(555012345);
+    User user         = User("username", "password");
 
     Api api = new Api(user, HOST.PLAIN_1)
         .setTest(true);
@@ -41,8 +41,8 @@ void main()
 ``` D
 #!/usr/bin/env rdmd
 
-import std.file     : readText;
-import std.stdio    : writeln;
+import std.file  : readText;
+import std.stdio : writeln;
 
 import dsmsapi.core : Content, Receiver;
 import dsmsapi.api  : Api, HOST, Response, User;
@@ -50,12 +50,12 @@ import dsmsapi.mms  : SendMms, Mms, Subject;
 
 void main()
 {
-    Content content     = Content(readText("mms.smil"));
-    Receiver receiver   = Receiver(555012345);
-    Subject subject     = Subject("Test");
-    User user           = User("username", "password");
-    Mms mms             = new Mms(subject, receiver, content);
-    SendMms sendMms     = new SendMms(mms);
+    Content content   = Content(readText("mms.smil"));
+    Receiver receiver = Receiver(555012345);
+    Subject subject   = Subject("Test");
+    User user         = User("username", "password");
+    Mms mms           = new Mms(subject, receiver, content);
+    SendMms sendMms   = new SendMms(mms);
 
     Api api = new Api(user, HOST.PLAIN_1)
         .setTest(true);
@@ -78,10 +78,10 @@ import dsmsapi.sms  : CHARSET, SendSms, Sms, Parameters, Pattern, TYPE;
 
 void main()
 {
-    Content content         = Content("Hello world!");
-    Parameters parameters   = Parameters("a", "b", "c", "d");
-    Receiver receiver       = Receiver(555012345);
-    User user               = User("username", "password");
+    Content content       = Content("Hello world!");
+    Parameters parameters = Parameters("a", "b", "c", "d");
+    Receiver receiver     = Receiver(555012345);
+    User user             = User("username", "password");
 
     Pattern pattern = new Pattern("Testowa nazwa")
         .setParameters(parameters)
@@ -169,7 +169,5 @@ void main()
 - [ ] idx
 
 ## ToDo
- * examples
- * debug mode
  * docs
  * tests

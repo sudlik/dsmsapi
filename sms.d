@@ -1,5 +1,7 @@
 module dsmsapi.sms;
 
+import std.conv : text;
+
 import dsmsapi.core :
     Content,
     Message,
@@ -11,20 +13,18 @@ import dsmsapi.core :
     RequestBuilder,
     RequestBuilderFactory;
 
-import std.conv : text;
-
 enum CHARSET : string
 {
-    DEFAULT         = "",
-    ISO_8859_1      = "iso-8859-1",
-    ISO_8859_2      = "iso-8859-2",
-    ISO_8859_3      = "iso-8859-3",
-    ISO_8859_4      = "iso-8859-4",
-    ISO_8859_5      = "iso-8859-5",
-    ISO_8859_7      = "iso-8859-7",
-    UTF_8           = "utf-8",
-    WINDOWS_1250    = "windows-1250",
-    WINDOWS_1251    = "windows-1251",
+    DEFAULT      = "",
+    ISO_8859_1   = "iso-8859-1",
+    ISO_8859_2   = "iso-8859-2",
+    ISO_8859_3   = "iso-8859-3",
+    ISO_8859_4   = "iso-8859-4",
+    ISO_8859_5   = "iso-8859-5",
+    ISO_8859_7   = "iso-8859-7",
+    UTF_8        = "utf-8",
+    WINDOWS_1250 = "windows-1250",
+    WINDOWS_1251 = "windows-1251",
 }
 
 enum TYPE : string
@@ -102,8 +102,9 @@ class Pattern
 class Sms : Message
 {
     private:
-        CHARSET charset = CHARSET.DEFAULT;
+        CHARSET charset   = CHARSET.DEFAULT;
         bool    normalize = false;
+
         Pattern pattern;
         Sender  sender;
         TYPE    type;
@@ -241,11 +242,11 @@ class SendSms : Method
             string[] receivers;
             Parameters parameters;
 
-            Sms sms                             = getSms();
-            Content content                     = sms.getContent();
-            Pattern pattern                     = sms.getPattern();
-            CHARSET charset                     = sms.getCharset();
-            ParameterFactory parameterFactory   = getParameterFactory();
+            Sms sms                           = getSms();
+            Content content                   = sms.getContent();
+            Pattern pattern                   = sms.getPattern();
+            CHARSET charset                   = sms.getCharset();
+            ParameterFactory parameterFactory = getParameterFactory();
 
             RequestBuilder requestBuilder = getRequestBuilder().setPath(PATH);
 

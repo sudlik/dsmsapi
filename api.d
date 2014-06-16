@@ -1,10 +1,10 @@
 module dsmsapi.api;
 
-import dsmsapi.core : AGENT, HOST, Method, METHOD, ParameterFactory, PARAMETER, PORT, PROTOCOL, RequestBuilder;
+import std.conv          : text;
+import std.digest.digest : toHexString;
+import std.digest.md     : md5Of;
 
-import std.conv             : text;
-import std.digest.digest    : toHexString;
-import std.digest.md        : md5Of;
+import dsmsapi.core : AGENT, HOST, Method, METHOD, ParameterFactory, PARAMETER, PORT, PROTOCOL, RequestBuilder;
 
 struct Response
 {
@@ -18,8 +18,8 @@ struct Response
 
 struct User
 {
-    string      name;
-    ubyte[16]   hash;
+    string    name;
+    ubyte[16] hash;
 
     this(string name, ubyte[16] hash)
     {
@@ -42,19 +42,19 @@ enum FORMAT
 class Api
 {
     static const {
-        dsmsapi.core.PORT PORT          = PORT.P80;
-        dsmsapi.core.METHOD METHOD      = METHOD.POST;
-        dsmsapi.core.AGENT AGENT        = AGENT.DSMSAPI;
-        dsmsapi.core.PROTOCOL PROTOCOL  = PROTOCOL.HTTP_11;
-        FORMAT RETURN_FORMAT            = FORMAT.JSON;
+        dsmsapi.core.PORT PORT         = PORT.P80;
+        dsmsapi.core.METHOD METHOD     = METHOD.POST;
+        dsmsapi.core.AGENT AGENT       = AGENT.DSMSAPI;
+        dsmsapi.core.PROTOCOL PROTOCOL = PROTOCOL.HTTP_11;
+        FORMAT RETURN_FORMAT           = FORMAT.JSON;
     }
 
     private:
         HOST host;
         User user;
 
-        ParameterFactory parameterFactory   = new ParameterFactory;
-        bool test                           = false;
+        ParameterFactory parameterFactory = new ParameterFactory;
+        bool test                         = false;
 
     public:
         this(User user, HOST host)

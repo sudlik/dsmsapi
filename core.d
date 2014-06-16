@@ -1,10 +1,17 @@
 module dsmsapi.core;
 
+debug import std.string : strip;
+debug import std.stdio  : writeln;
+
+debug(WITHOUT_SEND) import std.string : strip;
+debug(WITHOUT_SEND) import std.stdio  : writeln;
+
 import std.array        : empty;
 import std.conv         : to;
-import std.socket       : InternetAddress, TcpSocket;
 import std.socketstream : SocketStream;
 import std.uri          : encode;
+
+import std.socket : InternetAddress, TcpSocket;
 
 struct Receiver
 {
@@ -64,10 +71,10 @@ interface Method
     RequestBuilder getBuilder();
 }
 
-enum HOST
+enum HOST : string
 {
-    PLAIN_1 = "api.smsapi.pl",
-    PLAIN_2 = "api2.smsapi.pl",
+    PLAIN_1   = "api.smsapi.pl",
+    PLAIN_2   = "api2.smsapi.pl",
 }
 
 enum PATH : string
@@ -312,12 +319,30 @@ class Request
         string send()
         {
             string content;
-            SocketStream socketstream = getSocketStream();
 
-            socketstream.writeString(getHeaders());
-            
-            while (!socketstream.eof()) {
-                content ~= socketstream.readLine();
+            string headers              = getHeaders();
+            SocketStream socketstream   = getSocketStream();
+
+            debug {
+                writeln("[DEBUG] REQUEST HEADERS:");
+                writeln(headers);
+            }
+
+            debug (WITHOUT_SEND) {
+                writeln("[DEBUG] REQUEST HEADERS:");
+                writeln(strip(headers));
+                writeln("[DEBUG] REQUEST HAS NOT BEEN SENT!");
+            } else {
+                socketstream.writeString(headers);
+                
+                while (!socketstream.eof()) {
+                    content ~= socketstream.readLine();
+                }
+            }
+
+            debug {
+                writeln("[DEBUG] RESPONSE:");
+                writeln(content);
             }
 
             return content;
