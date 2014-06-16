@@ -77,7 +77,7 @@ class Pattern
         {
             return parameters;
         }
-        
+
         Pattern setParameters(Parameters parameters)
         {
             this.parameters = parameters;
