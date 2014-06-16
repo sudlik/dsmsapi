@@ -1,12 +1,20 @@
 module dsmsapi.sms;
 
-import dsmsapi.core : Content, Message, Method, Receiver;
+import dsmsapi.core :
+    Content,
+    Message,
+    Method,
+    ParameterFactory,
+    PARAMETER,
+    PATH,
+    Receiver,
+    RequestBuilder,
+    RequestBuilderFactory;
 
-import std.conv         : text;
-import std.digest.md    : md5Of;
-import std.uri          : encode;
+import std.conv : text;
 
-enum CHARSET : string {
+enum CHARSET : string
+{
     DEFAULT         = "",
     ISO_8859_1      = "iso-8859-1",
     ISO_8859_2      = "iso-8859-2",
@@ -19,7 +27,8 @@ enum CHARSET : string {
     WINDOWS_1251    = "windows-1251",
 }
 
-enum TYPE : string {
+enum TYPE : string
+{
     ECO = "ECO",
     WAY = "2Way",
 }
@@ -36,11 +45,7 @@ struct Sender
 
 struct Parameters
 {
-    string
-        first,
-        second,
-        third,
-        fourth;
+    string first, second, third, fourth;
 }
 
 class Pattern
@@ -61,9 +66,9 @@ class Pattern
             return single;
         }
 
-        Pattern setSingle(bool value)
+        Pattern setSingle(bool single)
         {
-            single = value;
+            this.single = single;
 
             return this;
         }
@@ -72,10 +77,10 @@ class Pattern
         {
             return parameters;
         }
-        
-        Pattern setParameters(Parameters value)
+
+        Pattern setParameters(Parameters parameters)
         {
-            parameters = value;
+            this.parameters = parameters;
 
             return this;
         }
@@ -86,9 +91,9 @@ class Pattern
         }
 
     protected:
-        Pattern setName(string value)
+        Pattern setName(string name)
         {
-            name = value;
+            this.name = name;
 
             return this;
         }
@@ -157,9 +162,9 @@ class Sms : Message
             return normalize;
         }
 
-        Sms setNormalize(bool value)
+        Sms setNormalize(bool normalize)
         {
-            normalize = value;
+            this.normalize = normalize;
             
             return this;
         }
@@ -169,9 +174,9 @@ class Sms : Message
             return charset;
         }
 
-        Sms setCharset(CHARSET value)
+        Sms setCharset(CHARSET charset)
         {
-            charset = value;
+            this.charset = charset;
             
             return this;
         }
@@ -192,23 +197,23 @@ class Sms : Message
         }
 
     protected:
-        Sms setSender(Sender value)
+        Sms setSender(Sender sender)
         {
-            sender = value;
+            this.sender = sender;
 
             return this;
         }
 
-        Sms setType(TYPE value)
+        Sms setType(TYPE type)
         {
-            type = value;
+            this.type = type;
 
             return this;
         }
 
-        Sms setPattern(Pattern value)
+        Sms setPattern(Pattern pattern)
         {
-            pattern = value;
+            this.pattern = pattern;
 
             return this;
         }
@@ -216,56 +221,72 @@ class Sms : Message
 
 class SendSms : Method
 {
-    static const string PATH = "sms.do";
+    static const dsmsapi.core.PATH PATH = PATH.SMS;
 
-    private Sms sms;
+    private:
+        RequestBuilder requestBuilder;
+        Sms sms;
+
+        ParameterFactory parameterFactory = new ParameterFactory;
 
     public:
         this(Sms sms)
         {
             setSms(sms);
+            setRequestBuilder(new RequestBuilderFactory().create());
         }
 
-        string getPath()
+        RequestBuilder getBuilder()
         {
-            Content content = getSms().getContent();
-            string from;
-            Pattern pattern = getSms().getPattern();
-            Parameters parameters = pattern.getParameters();
-            string receivers;
+            string[] receivers;
+            Parameters parameters;
+
+            Sms sms                             = getSms();
+            Content content                     = sms.getContent();
+            Pattern pattern                     = sms.getPattern();
+            CHARSET charset                     = sms.getCharset();
+            ParameterFactory parameterFactory   = getParameterFactory();
+
+            RequestBuilder requestBuilder = getRequestBuilder().setPath(PATH);
 
             if (getSms().getSender().name) {
-                from = text(sms.getSender());
+                requestBuilder.addParameter(parameterFactory.create(PARAMETER.FROM, text(sms.getSender())));
             } else {
-                from = getSms().getType();
+                requestBuilder.addParameter(parameterFactory.create(PARAMETER.FROM, sms.getType()));
             }
 
-            foreach (Receiver receiver; getSms().getReceivers()) {
-                receivers ~= "&to[]=" ~ encode(text(receiver));
+            foreach (Receiver receiver; sms.getReceivers()) {
+                receivers ~= text(receiver);
+            }
+
+            requestBuilder.addParameter(parameterFactory.create(PARAMETER.TO, receivers));
+
+            if (charset != CHARSET.DEFAULT) {
+                requestBuilder.addParameter(parameterFactory.create(PARAMETER.ENCODING, charset));
+            }
+
+            if (sms.getNormalize()) {
+                requestBuilder.addParameter(parameterFactory.create(PARAMETER.NORMALIZE, "1"));
             }
 
             if (text(content) != string.init) {
-                return
-                    PATH ~
-                    "?from=" ~  encode(from) ~
-                    receivers ~
-                    (getSms().getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ encode(getSms().getCharset()) : "") ~
-                    (getSms().getNormalize() ? "&normalize=1" : "") ~
-                    "&message=" ~ encode(text(content));
+                requestBuilder.addParameter(parameterFactory.create(PARAMETER.MESSAGE, text(content)));
             } else {
-                return
-                    PATH ~
-                    "?from=" ~  encode(from) ~
-                    receivers ~
-                    (parameters.first ? "&param1=" ~ encode(parameters.first) : "") ~
-                    (parameters.second ? "&param2=" ~ encode(parameters.second) : "") ~
-                    (parameters.third ? "&param3=" ~ encode(parameters.third) : "") ~
-                    (parameters.fourth ? "&param4=" ~ encode(parameters.fourth) : "") ~
-                    (getSms().getCharset() != CHARSET.DEFAULT ? "&encoding=" ~ encode(getSms().getCharset()) : "") ~
-                    (getSms().getNormalize() ? "&normalize=1" : "") ~
-                    (pattern.getSingle() ? "&single=1" : "") ~
-                    "&template=" ~ encode(pattern.getName());
+                parameters = pattern.getParameters();
+
+                requestBuilder
+                    .addParameter(parameterFactory.create(PARAMETER.PARAM_1, parameters.first))
+                    .addParameter(parameterFactory.create(PARAMETER.PARAM_2, parameters.second))
+                    .addParameter(parameterFactory.create(PARAMETER.PARAM_3, parameters.third))
+                    .addParameter(parameterFactory.create(PARAMETER.PARAM_4, parameters.fourth))
+                    .addParameter(parameterFactory.create(PARAMETER.TEMPLATE, pattern.getName()));
+
+                if (pattern.getSingle()) {
+                    requestBuilder.addParameter(parameterFactory.create(PARAMETER.SINGLE, "1"));
+                }
             }
+
+            return requestBuilder;
         }
 
     protected:
@@ -274,10 +295,27 @@ class SendSms : Method
             return sms;
         }
 
-        SendSms setSms(Sms value)
+        SendSms setSms(Sms sms)
         {
-            sms = value;
+            this.sms = sms;
 
             return this;
+        }
+
+        RequestBuilder getRequestBuilder()
+        {
+            return requestBuilder;
+        }
+
+        SendSms setRequestBuilder(RequestBuilder requestBuilder)
+        {
+            this.requestBuilder = requestBuilder;
+
+            return this;
+        }
+
+        ParameterFactory getParameterFactory()
+        {
+            return parameterFactory;
         }
 }

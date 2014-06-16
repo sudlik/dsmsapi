@@ -1,19 +1,10 @@
 module dsmsapi.api;
 
-import dsmsapi.core : Method;
+import dsmsapi.core : AGENT, HOST, Method, METHOD, ParameterFactory, PARAMETER, PORT, PROTOCOL, RequestBuilder;
 
 import std.conv             : text;
 import std.digest.digest    : toHexString;
 import std.digest.md        : md5Of;
-import std.socket           : InternetAddress, TcpSocket;
-import std.socketstream     : SocketStream;
-import std.stream           : Stream;
-import std.uri              : encode;
-
-enum HOST {
-    PLAIN_1 = "api.smsapi.pl",
-    PLAIN_2 = "api2.smsapi.pl",
-}
 
 struct Response
 {
@@ -43,57 +34,68 @@ struct User
     }
 }
 
+enum FORMAT
+{
+    JSON = "json",
+}
+
 class Api
 {
-    static const ushort PORT = 80;
-
-    static const string
-        METHOD              = "POST",
-        USER_AGENT          = "dsmsapi",
-        PROTOCOL_NAME       = "HTTP",
-        PROTOCOL_VERSION    = "1.1";
+    static const {
+        dsmsapi.core.PORT PORT          = PORT.P80;
+        dsmsapi.core.METHOD METHOD      = METHOD.POST;
+        dsmsapi.core.AGENT AGENT        = AGENT.DSMSAPI;
+        dsmsapi.core.PROTOCOL PROTOCOL  = PROTOCOL.HTTP_11;
+        FORMAT RETURN_FORMAT            = FORMAT.JSON;
+    }
 
     private:
-        bool    test;
-        HOST    host;
-        Stream  stream;
-        User    user;
+        HOST host;
+        User user;
+
+        ParameterFactory parameterFactory   = new ParameterFactory;
+        bool test                           = false;
 
     public:
-        this(User user, HOST host, bool test = false)
+        this(User user, HOST host)
         {
             setUser(user);
             setHost(host);
-            setTest(test);
-            setStream(createStream(getHost(), getPort()));
+        }
+
+        Api setTest(bool test)
+        {
+            this.test = test;
+
+            return this;
         }
 
         Response execute(Method method)
         {
-            string content;
+            ParameterFactory parameterFactory = getParameterFactory();
 
-            getStream().writeString(buildHeaders(method.getPath()));
-            
-            while (!getStream().eof()) {
-                content ~= getStream().readLine();
+            RequestBuilder requestBuilder = method
+                .getBuilder()
+                .setHost(getHost())
+                .setMethod(METHOD)
+                .setProtocol(PROTOCOL)
+                .setAgent(AGENT)
+                .setPort(PORT)
+                .addParameter(parameterFactory.create(PARAMETER.USERNAME, getUser().name))
+                .addParameter(parameterFactory.create(PARAMETER.PASSWORD, text(toHexString(getUser().hash))))
+                .addParameter(parameterFactory.create(PARAMETER.FORMAT, RETURN_FORMAT));
+
+            if (getTest()) {
+                requestBuilder.addParameter(parameterFactory.create(PARAMETER.TEST, "1"));
             }
 
-            return Response(content);
+            return Response(requestBuilder.getRequest().send());
         }
 
     protected:
-        string buildHeaders(string path)
+        bool getTest()
         {
-            return
-                getMethod() ~ " /" ~ path ~
-                "&username=" ~ encode(getUser().name) ~
-                "&password=" ~ encode(text(toHexString(getUser().hash))) ~
-                "&format=json" ~
-                (getTest() ? "&test=1" : "") ~
-                " " ~
-                getProtocolName() ~ "/" ~ getProtocolVersion() ~ "\r\n"
-                "Host: "  ~ getHost() ~ "\r\n"
-                "User-Agent: " ~ getUserAgent() ~ "\r\n\r\n";
+            return test;
         }
 
         User getUser()
@@ -101,76 +103,27 @@ class Api
             return user;
         }
 
-        bool getTest()
+        Api setUser(User user)
         {
-            return test;
+            this.user = user;
+
+            return this;
         }
 
-        string getMethod()
-        {
-            return METHOD;
-        }
-
-        string getHost()
+        HOST getHost()
         {
             return host;
         }
 
-        ushort getPort()
+        Api setHost(HOST host)
         {
-            return PORT;
-        }
-
-        string getUserAgent()
-        {
-            return USER_AGENT;
-        }
-
-        string getProtocolName()
-        {
-            return PROTOCOL_NAME;
-        }
-
-        string getProtocolVersion()
-        {
-            return PROTOCOL_VERSION;
-        }
-
-        Api setUser(User value)
-        {
-            user = value;
+            this.host = host;
 
             return this;
         }
 
-        Api setTest(bool value)
+        ParameterFactory getParameterFactory()
         {
-            test = value;
-
-            return this;
-        }
-
-        Api setHost(HOST value)
-        {
-            host = value;
-
-            return this;
-        }
-        
-        SocketStream createStream(string host, ushort port)
-        {
-            return new SocketStream(new TcpSocket(new InternetAddress(host, port)));
-        }
-
-        Api setStream(SocketStream value)
-        {
-            stream = value;
-
-            return this;
-        }
-
-        Stream getStream()
-        {
-            return stream;
+            return parameterFactory;
         }
 }
