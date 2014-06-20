@@ -1,16 +1,27 @@
 module dsmsapi.api;
 
+import std.stdio : writeln;
 import std.conv          : text;
 import std.digest.digest : toHexString;
 import std.digest.md     : md5Of;
 
-import dsmsapi.core : AGENT, HOST, Method, METHOD, ParameterFactory, PARAMETER, PORT, PROTOCOL, RequestBuilder;
+import dsmsapi.core : AGENT, HOST, Method, METHOD, Parameter, PARAMETER, PORT, PROTOCOL, RequestBuilder;
 
 struct Response
 {
-    string content;
+    private string content;
 
-    string toString()
+    pure this(string content)
+    {
+        this.content = content;
+    }
+
+    pure string toString()
+    {
+        return content;
+    }
+
+    pure string getContent()
     {
         return content;
     }
@@ -18,20 +29,32 @@ struct Response
 
 struct User
 {
-    string    name;
-    ubyte[16] hash;
+    private:
+        string    name;
+        ubyte[16] hash;
 
-    this(string name, ubyte[16] hash)
-    {
-        this.name = name;
-        this.hash = hash;
-    }
+    public:
+        pure this(string name, ubyte[16] hash)
+        {
+            this.name = name;
+            this.hash = hash;
+        }
 
-    this(string name, string pass)
-    {
-        this.name = name;
-        this.hash = md5Of(pass);
-    }
+        this(string name, string pass)
+        {
+            this.name = name;
+            this.hash = md5Of(pass);
+        }
+
+        pure string getName()
+        {
+            return name;
+        }
+
+        pure ubyte[16] getHash()
+        {
+            return hash;
+        }
 }
 
 enum FORMAT
@@ -42,88 +65,42 @@ enum FORMAT
 class Api
 {
     static const {
-        dsmsapi.core.PORT PORT         = PORT.P80;
-        dsmsapi.core.METHOD METHOD     = METHOD.POST;
-        dsmsapi.core.AGENT AGENT       = AGENT.DSMSAPI;
-        dsmsapi.core.PROTOCOL PROTOCOL = PROTOCOL.HTTP_11;
-        FORMAT RETURN_FORMAT           = FORMAT.JSON;
+        PORT port         = PORT.P80;
+        METHOD method     = METHOD.POST;
+        AGENT agent       = AGENT.DSMSAPI;
+        PROTOCOL protocol = PROTOCOL.HTTP_11;
+        FORMAT format     = FORMAT.JSON;
     }
 
     private:
         HOST host;
+        bool test;
         User user;
 
-        ParameterFactory parameterFactory = new ParameterFactory;
-        bool test                         = false;
-
     public:
-        this(User user, HOST host)
+        pure this(User user, HOST host, bool test = false)
         {
-            setUser(user);
-            setHost(host);
+            user = user;
+            host = host;
         }
 
-        Api setTest(bool test)
+        Response execute(Method apiMethod)
         {
-            this.test = test;
+            RequestBuilder requestBuilder = apiMethod
+                .getRequestBuilder()
+                .setHost(host)
+                .setMethod(method)
+                .setProtocol(protocol)
+                .setAgent(agent)
+                .setPort(port)
+                .addParameter(new Parameter(PARAMETER.USERNAME, user.getName()))
+                .addParameter(new Parameter(PARAMETER.PASSWORD, text(toHexString(user.getHash()))))
+                .addParameter(new Parameter(PARAMETER.FORMAT, format));
 
-            return this;
-        }
-
-        Response execute(Method method)
-        {
-            ParameterFactory parameterFactory = getParameterFactory();
-
-            RequestBuilder requestBuilder = method
-                .getBuilder()
-                .setHost(getHost())
-                .setMethod(METHOD)
-                .setProtocol(PROTOCOL)
-                .setAgent(AGENT)
-                .setPort(PORT)
-                .addParameter(parameterFactory.create(PARAMETER.USERNAME, getUser().name))
-                .addParameter(parameterFactory.create(PARAMETER.PASSWORD, text(toHexString(getUser().hash))))
-                .addParameter(parameterFactory.create(PARAMETER.FORMAT, RETURN_FORMAT));
-
-            if (getTest()) {
-                requestBuilder.addParameter(parameterFactory.create(PARAMETER.TEST, "1"));
+            if (test) {
+                requestBuilder.addParameter(new Parameter(PARAMETER.TEST, "1"));
             }
 
             return Response(requestBuilder.getRequest().send());
-        }
-
-    protected:
-        bool getTest()
-        {
-            return test;
-        }
-
-        User getUser()
-        {
-            return user;
-        }
-
-        Api setUser(User user)
-        {
-            this.user = user;
-
-            return this;
-        }
-
-        HOST getHost()
-        {
-            return host;
-        }
-
-        Api setHost(HOST host)
-        {
-            this.host = host;
-
-            return this;
-        }
-
-        ParameterFactory getParameterFactory()
-        {
-            return parameterFactory;
         }
 }
