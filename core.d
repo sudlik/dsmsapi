@@ -15,19 +15,39 @@ import std.socket : InternetAddress, TcpSocket;
 
 struct Receiver
 {
-    uint phone;
+    private uint phone;
 
-    string toString()
+    pure this(uint phone)
+    {
+        this.phone = phone;
+    }
+
+    pure string toString()
     {
         return to!string(phone);
+    }
+
+    pure uint getPhone()
+    {
+        return phone;
     }
 }
 
 struct Content
 {
-    string content;
+    private string content;
 
-    string toString()
+    pure this(string content)
+    {
+        this.content = content;
+    }
+
+    pure string toString()
+    {
+        return content;
+    }
+
+    pure string getContent()
     {
         return content;
     }
@@ -35,46 +55,31 @@ struct Content
 
 abstract class Message
 {
-    private:
+    protected:
         Receiver[]  receivers;
         Content     content;
 
     public:
-        Receiver[] getReceivers()
+        pure Receiver[] getReceivers()
         {
             return receivers;
         }
 
-        Content getContent()
+        pure Content getContent()
         {
             return content;
-        }
-
-    protected:
-        Message setReceivers(Receiver[] receivers)
-        {
-            this.receivers = receivers;
-
-            return this;
-        }
-
-        Message setContent(Content content)
-        {
-            this.content = content;
-
-            return this;
         }
 }
 
 interface Method
 {
-    RequestBuilder getBuilder();
+    RequestBuilder getRequestBuilder();
 }
 
 enum HOST : string
 {
-    PLAIN_1   = "api.smsapi.pl",
-    PLAIN_2   = "api2.smsapi.pl",
+    PLAIN_1 = "api.smsapi.pl",
+    PLAIN_2 = "api2.smsapi.pl",
 }
 
 enum PATH : string
@@ -95,7 +100,7 @@ enum PROTOCOL : string
 
 enum METHOD : string
 {
-    POST = "post",
+    POST = "POST",
 }
 
 enum PORT : ushort
@@ -105,23 +110,23 @@ enum PORT : ushort
 
 enum PARAMETER : string
 {
-    USERNAME    = "username",
-    PASSWORD    = "password",
-    FORMAT      = "format",
-    TEST        = "test",
-    TO          = "to",
-    FROM        = "from",
-    ENCODING    = "encoding",
-    NORMALIZE   = "normalize",
-    MESSAGE     = "message",
-    PARAM_1     = "param1",
-    PARAM_2     = "param2",
-    PARAM_3     = "param3",
-    PARAM_4     = "param4",
-    SINGLE      = "single",
-    TEMPLATE    = "template",
-    SUBJECT     = "subject",
-    SMIL        = "smil",
+    USERNAME  = "username",
+    PASSWORD  = "password",
+    FORMAT    = "format",
+    TEST      = "test",
+    TO        = "to",
+    FROM      = "from",
+    ENCODING  = "encoding",
+    NORMALIZE = "normalize",
+    MESSAGE   = "message",
+    PARAM_1   = "param1",
+    PARAM_2   = "param2",
+    PARAM_3   = "param3",
+    PARAM_4   = "param4",
+    SINGLE    = "single",
+    TEMPLATE  = "template",
+    SUBJECT   = "subject",
+    SMIL      = "smil",
 }
 
 class Parameter
@@ -131,55 +136,52 @@ class Parameter
         string value;
         string[] values;
 
-    this(string name, string value)
-    {
-        setName(name);
-        setValue(value);
-    }
+    public:
+        this(string name, string value)
+        {
+            this.name = name;
 
-    this(string name, string[] values)
-    {
-        setName(name);
-        setValues(values);
-    }
-
-    string getName()
-    {
-        return name;
-    }
-
-    Parameter setName(string name)
-    {
-        this.name = name;
-
-        return this;
-    }
-
-    string getValue()
-    {
-        return value;
-    }
-
-    Parameter setValue(string val)
-    {
-        value = encode(val);
-
-        return this;
-    }
-
-    string[] getValues()
-    {
-        return values;
-    }
-
-    Parameter setValues(string[] vals)
-    {
-        foreach (string val; vals) {
-            values ~= encode(val);
+            setValue(value);
         }
 
-        return this;
-    }
+        this(string name, string[] values)
+        {
+            this.name = name;
+
+            setValues(values);
+        }
+
+        pure string getName()
+        {
+            return name;
+        }
+
+        pure string getValue()
+        {
+            return value;
+        }
+
+        pure string[] getValues()
+        {
+            return values;
+        }
+
+    private:
+        Parameter setValue(string value)
+        {
+            this.value = encode(value);
+
+            return this;
+        }
+
+        Parameter setValues(string[] values)
+        {
+            foreach (string value; values) {
+                this.values ~= encode(value);
+            }
+
+            return this;
+        }
 }
 
 class RequestBuilder
@@ -194,49 +196,49 @@ class RequestBuilder
         PROTOCOL protocol;
 
     public:
-        RequestBuilder setAgent(AGENT agent)
+        pure RequestBuilder setAgent(AGENT agent)
         {
             this.agent = agent;
 
             return this;
         }
 
-        RequestBuilder setMethod(METHOD method)
+        pure RequestBuilder setMethod(METHOD method)
         {
             this.method = method;
 
             return this;
         }
 
-        RequestBuilder setProtocol(PROTOCOL protocol)
+        pure RequestBuilder setProtocol(PROTOCOL protocol)
         {
             this.protocol = protocol;
 
             return this;
         }
 
-        RequestBuilder setHost(HOST host)
+        pure RequestBuilder setHost(HOST host)
         {
             this.host = host;
 
             return this;
         }
 
-        RequestBuilder setPort(PORT port)
+        pure RequestBuilder setPort(PORT port)
         {
             this.port = port;
 
             return this;
         }
 
-        RequestBuilder setPath(PATH path)
+        pure RequestBuilder setPath(PATH path)
         {
             this.path = path;
 
             return this;
         }
 
-        RequestBuilder addParameter(Parameter parameter)
+        pure RequestBuilder addParameter(Parameter parameter)
         {
             parameters ~= parameter;
 
@@ -245,11 +247,11 @@ class RequestBuilder
 
         Request getRequest()
         {
-            string headers = getMethod() ~ " /" ~ getPath();
+            string headers = method ~ " /" ~ path;
             string singleValue;
             string[] multipleValues;
 
-            foreach (int i, Parameter parameter; getParameters()) {
+            foreach (int i, Parameter parameter; parameters) {
                 if (!empty(parameter.getValues())) {
                     foreach (string value; parameter.getValues()) {
                         headers ~= (i == 0 ? "?" : "&") ~ parameter.getName() ~ "[]=" ~ value;
@@ -259,47 +261,11 @@ class RequestBuilder
                 }
             }
 
-            return new RequestFactory().create(
-                getHost(),
-                getPort(),
-                headers ~ " " ~ getProtocol() ~ "\r\nHost: "  ~ getHost() ~ "\r\nUser-Agent: " ~ getAgent() ~ "\r\n\r\n"
+            return new Request(
+                host,
+                port,
+                headers ~ " " ~ protocol ~ "\r\nHost: "  ~ host ~ "\r\nUser-Agent: " ~ agent ~ "\r\n\r\n"
             );
-        }
-
-    protected:
-        AGENT getAgent()
-        {
-            return agent;
-        }
-
-        METHOD getMethod()
-        {
-            return method;
-        }
-
-        PROTOCOL getProtocol()
-        {
-            return protocol;
-        }
-
-        HOST getHost()
-        {
-            return host;
-        }
-
-        PORT getPort()
-        {
-            return port;
-        }
-
-        PATH getPath()
-        {
-            return path;
-        }
-
-        Parameter[] getParameters()
-        {
-            return parameters;
         }
 }
 
@@ -312,16 +278,13 @@ class Request
     public:
         this(HOST host, ushort port, string headers)
         {
-            setSocketStream(new SocketStreamFactory().create(host, port));
-            setHeaders(headers);
+            this.socketStream = new SocketStreamFactory().create(host, port);
+            this.headers = headers;
         }
 
         string send()
         {
             string content;
-
-            string headers              = getHeaders();
-            SocketStream socketstream   = getSocketStream();
 
             debug {
                 writeln("[DEBUG] REQUEST HEADERS:");
@@ -333,10 +296,10 @@ class Request
                 writeln(strip(headers));
                 writeln("[DEBUG] REQUEST HAS NOT BEEN SENT!");
             } else {
-                socketstream.writeString(headers);
+                socketStream.writeString(headers);
                 
-                while (!socketstream.eof()) {
-                    content ~= socketstream.readLine();
+                while (!socketStream.eof()) {
+                    content ~= socketStream.readLine();
                 }
             }
 
@@ -347,31 +310,6 @@ class Request
 
             return content;
         }
-        
-    protected:
-        Request setSocketStream(SocketStream socketStream)
-        {
-            this.socketStream = socketStream;
-
-            return this;
-        }
-
-        SocketStream getSocketStream()
-        {
-            return socketStream;
-        }
-
-        Request setHeaders(string headers)
-        {
-            this.headers = headers;
-
-            return this;
-        }
-
-        string getHeaders()
-        {
-            return headers;
-        }
 }
 
 class SocketStreamFactory
@@ -379,34 +317,5 @@ class SocketStreamFactory
     SocketStream create(string host, ushort port)
     {
         return new SocketStream(new TcpSocket(new InternetAddress(host, port)));
-    }
-}
-
-class RequestBuilderFactory
-{
-    RequestBuilder create()
-    {
-        return new RequestBuilder;
-    }
-}
-
-class ParameterFactory
-{
-    Parameter create(string name, string value)
-    {
-        return new Parameter(name, value);
-    }
-
-    Parameter create(string name, string[] values)
-    {
-        return new Parameter(name, values);
-    }
-}
-
-class RequestFactory
-{
-    Request create(HOST host, ushort port, string headers)
-    {
-        return new Request(host, port, headers);
     }
 }

@@ -15,26 +15,15 @@ import dsmsapi.sms  : CHARSET, SendSms, Sms, TYPE;
 
 void main()
 {
-    SendSms sendSms;
-    Response response;
-    Sms sms;
-
     Content content   = Content("Hello world!");
     Receiver receiver = Receiver(555012345);
     User user         = User("username", "password");
+    Sms sms           = new Sms(TYPE.ECO, receiver, content, CHARSET.UTF_8, true);
+    SendSms sendSms   = new SendSms(sms);
+    Api api           = new Api(user, HOST.PLAIN_1, true);
+    Response response = api.execute(sendSms);
 
-    Api api = new Api(user, HOST.PLAIN_1)
-        .setTest(true);
-
-    sms = new Sms(TYPE.ECO, receiver, content)
-        .setCharset(CHARSET.UTF_8)
-        .setNormalize(true);
-
-    sendSms = new SendSms(sms);
-
-    response = api.execute(sendSms);
-
-    writeln(response.content);
+    writeln(response.getContent());
 }
 ```
 ### MMS
@@ -52,18 +41,14 @@ void main()
 {
     Content content   = Content(readText("mms.smil"));
     Receiver receiver = Receiver(555012345);
-    Subject subject   = Subject("Test");
+    Subject subject   = Subject("Hello world!");
     User user         = User("username", "password");
     Mms mms           = new Mms(subject, receiver, content);
     SendMms sendMms   = new SendMms(mms);
+    Api api           = new Api(user, HOST.PLAIN_1, true);
+    Response response = api.execute(sendMms);
 
-    Api api = new Api(user, HOST.PLAIN_1)
-        .setTest(true);
-
-    Response response = api
-        .execute(sendMms);
-
-    writeln(response.content);
+    writeln(response.getContent());
 }
 ```
 ### Pattern
@@ -72,33 +57,22 @@ void main()
 
 import std.stdio : writeln;
 
-import dsmsapi.core : Content, Receiver;
+import dsmsapi.core : Receiver;
 import dsmsapi.api  : Api, HOST, Response, User;
-import dsmsapi.sms  : CHARSET, SendSms, Sms, Parameters, Pattern, TYPE;
+import dsmsapi.sms  : CHARSET, Parameters, Pattern, SendSms, Sms, TYPE;
 
 void main()
 {
-    Content content       = Content("Hello world!");
     Parameters parameters = Parameters("a", "b", "c", "d");
+    Pattern pattern       = new Pattern("Hello world", parameters, true);
     Receiver receiver     = Receiver(555012345);
     User user             = User("username", "password");
+    Sms sms               = new Sms(TYPE.ECO, receiver, pattern, CHARSET.UTF_8, true);
+    SendSms sendSms       = new SendSms(sms);
+    Api api               = new Api(user, HOST.PLAIN_1, true);
+    Response response     = api.execute(sendSms);
 
-    Pattern pattern = new Pattern("Testowa nazwa")
-        .setParameters(parameters)
-        .setSingle(true);
-
-    Sms sms = new Sms(TYPE.ECO, receiver, pattern)
-        .setCharset(CHARSET.UTF_8)
-        .setNormalize(true);
-
-    SendSms sendSms = new SendSms(sms);
-
-    Api api = new Api(user, HOST.PLAIN_1)
-        .setTest(true);
-
-    Response response = api.execute(sendSms);
-
-    writeln(response.content);
+    writeln(response.getContent());
 }
 ```
 ## Features
@@ -111,6 +85,8 @@ void main()
 - [ ] SSL
 - [ ] WAP PUSH (udh)
 - [ ] HLR
+- [ ] SMIL generator
+- [ ] SMIL validator
 
 ### SMS
 - [x] charset (encoding)
@@ -175,3 +151,6 @@ void main()
  * installation instruction
  * dub (http://code.dlang.org)
  * versions tags
+ * contracts
+ * improve `struct Response`
+ * move `class RequestBuilder` to separate repository
