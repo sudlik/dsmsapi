@@ -1,6 +1,5 @@
 module dsmsapi.api;
 
-import std.stdio : writeln;
 import std.conv          : text;
 import std.digest.digest : toHexString;
 import std.digest.md     : md5Of;
@@ -80,8 +79,8 @@ class Api
     public:
         pure this(User user, HOST host, bool test = false)
         {
-            user = user;
-            host = host;
+            this.user = user;
+            this.host = host;
         }
 
         Response execute(Method apiMethod)
