@@ -79,9 +79,9 @@ class SendMms : Method
         }
 
         requestBuilder
-            .addParameter(new Parameter(PARAMETER.TO, receivers))
-            .addParameter(new Parameter(PARAMETER.SUBJECT, text(mms.getSubject())))
-            .addParameter(new Parameter(PARAMETER.SMIL, text(mms.getContent())));
+            .setParameter(new Parameter(PARAMETER.TO, receivers))
+            .setParameter(new Parameter(PARAMETER.SUBJECT, text(mms.getSubject())))
+            .setParameter(new Parameter(PARAMETER.SMIL, text(mms.getContent())));
 
         return requestBuilder;
     }
