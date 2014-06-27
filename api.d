@@ -79,8 +79,8 @@ class Api
     public:
         pure this(User user, HOST host, bool test = false)
         {
-            user = user;
-            host = host;
+            this.user = user;
+            this.host = host;
         }
 
         Response execute(Method apiMethod)
