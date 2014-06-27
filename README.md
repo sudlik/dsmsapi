@@ -163,18 +163,21 @@ void main()
 - [ ] idx
 
 ## ToDo
- * docs (http://dlang.org/ddoc.html)
- * tests (http://dlang.org/unittest.html)
- * dstyle (http://dlang.org/dstyle.html)
- * dub (http://code.dlang.org)
+ * add docs (http://dlang.org/ddoc.html)
+ * add tests (http://dlang.org/unittest.html)
+ * use dstyle (http://dlang.org/dstyle.html)
+ * use dub (http://code.dlang.org)
  * versions tags
- * contracts
- * improve `struct Response`
- * move `class RequestBuilder` to separate repository
- * use immutable
- * http://smsapi.pl/assets/files/api/SMSAPI_http_EXT.pdf
- * http://smsapi.pl/assets/files/api/SMSAPI_phonebook.pdf
- * improve SendSms
- * use interfaces
- * use unions
- * use RedBlackTree for parameters in RequestBuilder
+ * consider use contracts
+ * improve `Response`
+ * move `RequestBuilder` to separate repository
+ * consider use immutable
+ * add support for subusers and sender fields (http://smsapi.pl/assets/files/api/SMSAPI_http_EXT.pdf)
+ * add support for phonebook (http://smsapi.pl/assets/files/api/SMSAPI_phonebook.pdf)
+ * improve `SendSms`
+ * consider use interfaces
+ * consider use unions
+ * use `RedBlackTree` for `parameters` in `RequestBuilder`
+ * redesign `mms.d` like `sms.d`
+ * rethink `class` and `struct` usage
+ * add timers to debug mode (http://wiki.dlang.org/Timing_Code)
