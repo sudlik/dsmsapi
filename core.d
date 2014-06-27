@@ -325,8 +325,8 @@ class RequestBuilder
 
         Request getRequest()
         {
-            string headers = method ~ " /" ~ path;
             bool first = true;
+            string headers = method ~ " /" ~ path;
 
             foreach (string name, Parameter parameter; parameters) {
                 if (!empty(parameter.getValues())) {

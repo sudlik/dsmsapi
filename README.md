@@ -13,18 +13,26 @@ dmd 2.065
 
 import std.stdio : writeln;
 
-import dsmsapi.core : Content, Receiver;
+import dsmsapi.core : Content, PARAMETER, Receiver;
 import dsmsapi.api  : Api, HOST, Response, User;
-import dsmsapi.sms  : CHARSET, SendSms, Sms, TYPE;
+import dsmsapi.sms  : Builder, CHARSET, Eco, SendSms, TYPE, Variable;
 
 void main()
 {
-    Content content   = Content("Hello world!");
+    Content  content  = new Content("Hello [%1%]!");
     Receiver receiver = Receiver(555012345);
-    User user         = User("username", "password");
-    Sms sms           = new Sms(TYPE.ECO, receiver, content, CHARSET.UTF_8, true);
-    SendSms sendSms   = new SendSms(sms);
-    Api api           = new Api(user, HOST.PLAIN_1, true);
+    User     user     = User("username", "password");
+
+    Eco sms = new Builder(content)
+        .setNormalize(true)
+        .setSingle(true)
+        .setCharset(CHARSET.UTF_8)
+        .addReceiver(receiver)
+        .addVariable(Variable(PARAMETER.PARAM_1, "world"))
+        .getEco();
+
+    SendSms  sendSms  = new SendSms(sms);
+    Api      api      = new Api(user, HOST.PLAIN_1, true);
     Response response = api.execute(sendSms);
 
     writeln(response.getContent());
@@ -43,13 +51,13 @@ import dsmsapi.mms  : SendMms, Mms, Subject;
 
 void main()
 {
-    Content content   = Content(readText("mms.smil"));
+    Content  content  = new Content(readText("mms.smil"));
     Receiver receiver = Receiver(555012345);
-    Subject subject   = Subject("Hello world!");
-    User user         = User("username", "password");
-    Mms mms           = new Mms(subject, receiver, content);
-    SendMms sendMms   = new SendMms(mms);
-    Api api           = new Api(user, HOST.PLAIN_1, true);
+    Subject  subject  = Subject("Hello world!");
+    User     user     = User("username", "password");
+    Mms      mms      = new Mms(subject, receiver, content);
+    SendMms  sendMms  = new SendMms(mms);
+    Api      api      = new Api(user, HOST.PLAIN_1, true);
     Response response = api.execute(sendMms);
 
     writeln(response.getContent());
@@ -61,20 +69,27 @@ void main()
 
 import std.stdio : writeln;
 
-import dsmsapi.core : Receiver;
+import dsmsapi.core : PARAMETER, Receiver;
 import dsmsapi.api  : Api, HOST, Response, User;
-import dsmsapi.sms  : CHARSET, Parameters, Pattern, SendSms, Sms, TYPE;
+import dsmsapi.sms  : Builder, CHARSET, Eco, Pattern, SendSms, TYPE, Variable;
 
 void main()
 {
-    Parameters parameters = Parameters("a", "b", "c", "d");
-    Pattern pattern       = new Pattern("Hello world", parameters, true);
-    Receiver receiver     = Receiver(555012345);
-    User user             = User("username", "password");
-    Sms sms               = new Sms(TYPE.ECO, receiver, pattern, CHARSET.UTF_8, true);
-    SendSms sendSms       = new SendSms(sms);
-    Api api               = new Api(user, HOST.PLAIN_1, true);
-    Response response     = api.execute(sendSms);
+    Pattern  pattern  = new Pattern("Hello world");
+    Receiver receiver = Receiver(555012345);
+    User     user     = User("username", "password");
+
+    Eco sms = new Builder(pattern)
+        .setNormalize(true)
+        .setSingle(true)
+        .setCharset(CHARSET.UTF_8)
+        .addReceiver(receiver)
+        .addVariable(Variable(PARAMETER.PARAM_1, "world"))
+        .getEco();
+
+    SendSms  sendSms  = new SendSms(sms);
+    Api      api      = new Api(user, HOST.PLAIN_1, true);
+    Response response = api.execute(sendSms);
 
     writeln(response.getContent());
 }
