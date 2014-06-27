@@ -2,6 +2,10 @@
 ## About
 Client for SMSAPI REST API ([smsapi.pl/rest](http://smsapi.pl/rest)),
 written in D programming language ([dlang.org](http://dlang.org))
+## Requirements
+dmd 2.065
+## Installation
+`git clone git@github.com:sudlik/dsmsapi.git`
 ## Examples
 ### SMS
 ``` D
@@ -87,17 +91,19 @@ void main()
 - [ ] HLR
 - [ ] SMIL generator
 - [ ] SMIL validator
+- [x] host switch
+- [x] test request
 
 ### SMS
 - [x] charset (encoding)
 - [x] content (message)
 - [ ] group
 - [x] normalize
-- [x] parameters *partially supported*
+- [x] parameters
 - [x] patterns (templates)
 - [x] sender name
 - [x] sender types
-- [x] single *partially supported*
+- [x] single
 - [ ] flash
 - [ ] details
 - [ ] date_validate
@@ -116,7 +122,6 @@ void main()
 - [ ] date
 - [ ] idx
 - [ ] check_idx
-- [ ] test
 
 ### MMS
 - [x] content (SMIL)
@@ -125,7 +130,6 @@ void main()
 - [ ] date
 - [ ] idx
 - [ ] check_idx
-- [ ] test
 
 ### VMS
 - [ ] tts
@@ -138,7 +142,6 @@ void main()
 - [ ] date
 - [ ] idx
 - [ ] check_idx
-- [ ] test
 
 ### HLR
 - [ ] number
@@ -148,9 +151,15 @@ void main()
  * docs (http://dlang.org/ddoc.html)
  * tests (http://dlang.org/unittest.html)
  * dstyle (http://dlang.org/dstyle.html)
- * installation instruction
  * dub (http://code.dlang.org)
  * versions tags
  * contracts
  * improve `struct Response`
  * move `class RequestBuilder` to separate repository
+ * use immutable
+ * http://smsapi.pl/assets/files/api/SMSAPI_http_EXT.pdf
+ * http://smsapi.pl/assets/files/api/SMSAPI_phonebook.pdf
+ * improve SendSms
+ * use interfaces
+ * use unions
+ * use RedBlackTree for parameters in RequestBuilder

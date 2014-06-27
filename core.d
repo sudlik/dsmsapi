@@ -33,24 +33,102 @@ struct Receiver
     }
 }
 
-struct Content
+struct Variable
 {
-    private string content;
+    PARAMETER name;
+    string    value;
 
-    pure this(string content)
+    pure this(PARAMETER name, string value)
     {
-        this.content = content;
+        if (
+            name == PARAMETER.PARAM_1
+            || name == PARAMETER.PARAM_2
+            || name == PARAMETER.PARAM_3
+            || name == PARAMETER.PARAM_4
+        ) {
+            this.name  = name;
+        } else {
+            throw new Exception("Invalid name");
+        }
+
+        this.value = value;
     }
 
-    pure string toString()
+    pure string getName()
     {
-        return content;
+        return name;
     }
 
-    pure string getContent()
+    pure string getValue()
     {
-        return content;
+        return value;
     }
+}
+
+struct VariableCollection
+{
+    private Variable[] variables;
+
+    pure Variable[] all()
+    {
+        return variables;
+    }
+
+    VariableCollection set(Variable[] variables)
+    {
+        foreach (Variable variable; variables) {
+            add(variable);
+        }
+
+        return this;
+    }
+
+    VariableCollection add(Variable variable)
+    {
+        foreach (Variable var; variables) {
+            if (variable.getName() == var.getName()) {
+                throw new Exception("Variable already added");
+            }
+        }
+        
+        variables ~= variable;
+
+        return this;
+    }
+}
+
+class Content
+{
+    private:
+        string value;
+        VariableCollection variableCollection = VariableCollection();
+
+    public:
+        pure this(string value)
+        {
+            this.value = value;
+        }
+
+        pure this(string value, VariableCollection variableCollection)
+        {
+            this.value = value;
+            this.variableCollection = variableCollection;
+        }
+
+        override pure string toString()
+        {
+            return value;
+        }
+
+        pure string getValue()
+        {
+            return value;
+        }
+
+        pure VariableCollection getVariableCollection()
+        {
+            return variableCollection;
+        }
 }
 
 abstract class Message
@@ -187,13 +265,13 @@ class Parameter
 class RequestBuilder
 {
     private:
-        AGENT agent;
-        HOST host;
-        METHOD method;
-        Parameter[] parameters;
-        PATH path;
-        PORT port;
-        PROTOCOL protocol;
+        AGENT             agent;
+        HOST              host;
+        METHOD            method;
+        Parameter[string] parameters;
+        PATH              path;
+        PORT              port;
+        PROTOCOL          protocol;
 
     public:
         pure RequestBuilder setAgent(AGENT agent)
@@ -238,9 +316,9 @@ class RequestBuilder
             return this;
         }
 
-        pure RequestBuilder addParameter(Parameter parameter)
+        pure RequestBuilder setParameter(Parameter parameter)
         {
-            parameters ~= parameter;
+            parameters[parameter.getName()] = parameter;
 
             return this;
         }
@@ -248,17 +326,20 @@ class RequestBuilder
         Request getRequest()
         {
             string headers = method ~ " /" ~ path;
-            string singleValue;
-            string[] multipleValues;
+            bool first = true;
 
-            foreach (int i, Parameter parameter; parameters) {
+            foreach (string name, Parameter parameter; parameters) {
                 if (!empty(parameter.getValues())) {
                     foreach (string value; parameter.getValues()) {
-                        headers ~= (i == 0 ? "?" : "&") ~ parameter.getName() ~ "[]=" ~ value;
+                        headers ~= (first ? "?" : "&") ~ name ~ "[]=" ~ value;
+
+                        first = false;
                     }
                 } else {
-                    headers ~= (i == 0 ? "?" : "&") ~ parameter.getName() ~ "=" ~ parameter.getValue();
+                    headers ~= (first ? "?" : "&") ~ name ~ "=" ~ parameter.getValue();
                 }
+
+                first = false;
             }
 
             return new Request(

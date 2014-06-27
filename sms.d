@@ -1,6 +1,7 @@
 module dsmsapi.sms;
 
-import std.conv : text;
+import std.array : empty;
+import std.conv  : text;
 
 import dsmsapi.core :
     Content,
@@ -10,7 +11,9 @@ import dsmsapi.core :
     PARAMETER,
     PATH,
     Receiver,
-    RequestBuilder;
+    RequestBuilder,
+    Variable,
+    VariableCollection;
 
 enum CHARSET : string
 {
@@ -28,8 +31,9 @@ enum CHARSET : string
 
 enum TYPE : string
 {
-    ECO = "ECO",
-    WAY = "2Way",
+    ECO     = "ECO",
+    PRO     = "",
+    TWO_WAY = "2Way",
 }
 
 struct Sender
@@ -52,192 +56,27 @@ struct Sender
     }
 }
 
-struct Parameters
+class Pattern : Content
 {
-    private string first, second, third, fourth;
-
-    pure this(string first, string second, string third, string fourth)
+    pure this(string value)
     {
-        this.first  = first;
-        this.second = second;
-        this.third  = third;
-        this.fourth = fourth;
+        super(value);
     }
 
-    pure string getFirst()
+    pure this(string value, VariableCollection variableCollection)
     {
-        return first;
-    }
-
-    pure string getSecond()
-    {
-        return second;
-    }
-
-    pure string getThird()
-    {
-        return third;
-    }
-
-    pure string getFourth()
-    {
-        return fourth;
+        super(value, variableCollection);
     }
 }
 
-class Pattern
+abstract class Sms : Message
 {
     private:
-        string name;
-        Parameters parameters;
-        bool single;
-
-    public:
-        pure this(string name, Parameters parameters = Parameters(), bool single = false)
-        {
-            this.name = name;
-            this.parameters = parameters;
-            this.single = single;
-        }
-
-        pure string getName()
-        {
-            return name;
-        }
-
-        pure Parameters getParameters()
-        {
-            return parameters;
-        }
-
-        pure bool getSingle()
-        {
-            return single;
-        }
-}
-
-class Sms : Message
-{
-    private:
-        CHARSET charset;
-        bool normalize;
-        Pattern pattern;
+        Config config;
         Sender sender;
-        TYPE type;
+        TYPE   type;
 
     public:
-        pure this(
-            Sender sender,
-            Receiver[] receivers,
-            Content content,
-            CHARSET charset = CHARSET.DEFAULT,
-            bool normalize = false
-        ) {
-            this.sender = sender;
-            this.receivers = receivers;
-            this.content = content;
-            this.charset = charset;
-            this.normalize = normalize;
-        }
-
-        pure this(
-            Sender sender,
-            Receiver receiver,
-            Content content,
-            CHARSET charset = CHARSET.DEFAULT,
-            bool normalize = false
-        ) {
-            this.sender = sender;
-            this.receivers = [receiver];
-            this.content = content;
-            this.charset = charset;
-            this.normalize = normalize;
-        }
-
-        pure this(
-            TYPE type,
-            Receiver[] receivers,
-            Content content,
-            CHARSET charset = CHARSET.DEFAULT,
-            bool normalize = false
-        ) {
-            this.type = type;
-            this.receivers = receivers;
-            this.content = content;
-            this.charset = charset;
-            this.normalize = normalize;
-        }
-
-        pure this(
-            TYPE type,
-            Receiver receiver,
-            Content content,
-            CHARSET charset = CHARSET.DEFAULT,
-            bool normalize = false
-        ) {
-            this.type = type;
-            this.receivers = [receiver];
-            this.content = content;
-            this.charset = charset;
-            this.normalize = normalize;
-        }
-
-        pure this(
-            Sender sender,
-            Receiver[] receivers,
-            Pattern pattern,
-            CHARSET charset = CHARSET.DEFAULT,
-            bool normalize = false
-        ) {
-            this.sender = sender;
-            this.receivers = receivers;
-            this.pattern = pattern;
-            this.charset = charset;
-            this.normalize = normalize;
-        }
-
-        pure this(
-            Sender sender,
-            Receiver receiver,
-            Pattern pattern,
-            CHARSET charset = CHARSET.DEFAULT,
-            bool normalize = false
-        ) {
-            this.sender = sender;
-            this.receivers = [receiver];
-            this.pattern = pattern;
-            this.charset = charset;
-            this.normalize = normalize;
-        }
-
-        pure this(
-            TYPE type,
-            Receiver[] receivers,
-            Pattern pattern,
-            CHARSET charset = CHARSET.DEFAULT,
-            bool normalize = false
-        ) {
-            this.type = type;
-            this.receivers = receivers;
-            this.pattern = pattern;
-            this.charset = charset;
-            this.normalize = normalize;
-        }
-
-        pure this(
-            TYPE type,
-            Receiver receiver,
-            Pattern pattern,
-            CHARSET charset = CHARSET.DEFAULT,
-            bool normalize = false
-        ) {
-            this.type = type;
-            this.receivers = [receiver];
-            this.pattern = pattern;
-            this.charset = charset;
-            this.normalize = normalize;
-        }
-
         pure Sender getSender()
         {
             return sender;
@@ -248,10 +87,195 @@ class Sms : Message
             return type;
         }
 
-        pure Pattern getPattern()
+        pure Config getConfig()
         {
-            return pattern;
+            return config;
         }
+
+    protected:
+        this(TYPE type, Sender sender, Receiver[] receivers, Content content, Config config)
+        {
+            this.type      = type;
+            this.sender    = sender;
+            this.receivers = receivers;
+            this.config    = config;
+            this.content   = content;
+        }
+
+        this(TYPE type, Receiver[] receivers, Content content, Config config)
+        {
+            this(type, Sender(), receivers, content, config);
+        }
+}
+
+class Eco : Sms
+{
+    this(Receiver[] receivers, Content content, Config config)
+    {
+        super(TYPE.ECO, receivers, content, config);
+    }
+}
+
+class Pro : Sms
+{
+    this(Sender sender, Receiver[] receivers, Content content, Config config)
+    {
+        super(TYPE.PRO, sender, receivers, content, config);
+    }
+}
+
+class TwoWay : Sms
+{
+    this(Receiver[] receivers, Content content, Config config)
+    {
+        super(TYPE.TWO_WAY, receivers, content, config);
+    }
+}
+
+struct Config
+{
+    private:
+        CHARSET charset;
+        bool    normalize;
+        bool    single;
+
+    pure this(CHARSET charset = CHARSET.DEFAULT, bool normalize = false, bool single = false)
+    {
+        this.charset   = charset;
+        this.normalize = normalize;
+        this.single    = single;
+    }
+
+    pure getCharset()
+    {
+        return charset;
+    }
+
+    pure getNormalize()
+    {
+        return normalize;
+    }
+
+    pure getSingle()
+    {
+        return single;
+    }
+}
+
+struct Builder
+{
+    private:
+        CHARSET            charset = CHARSET.DEFAULT;
+        Content            content;
+        bool               normalize = false;
+        VariableCollection variableCollection = VariableCollection();
+        Receiver[]         receivers;
+        Sender             sender;
+        bool               single = false;
+
+    public:
+        pure this(Sender sender, Content content)
+        {
+            this.sender  = sender;
+            this.content = content;
+        }
+
+        pure this(Content content)
+        {
+            this.content = content;
+        }
+
+        pure Builder setNormalize(bool normalize)
+        {
+            this.normalize = normalize;
+
+            return this;
+        }
+        
+        pure Builder setSingle(bool single)
+        {
+            this.single = single;
+
+            return this;
+        }
+        
+        pure Builder setCharset(CHARSET charset)
+        {
+            this.charset = charset;
+
+            return this;
+        }
+        
+        pure Builder addReceiver(Receiver receiver)
+        {
+            this.receivers ~= receiver;
+
+            return this;
+        }
+        
+        pure Builder setReceivers(Receiver[] receivers)
+        {
+            this.receivers = receivers;
+
+            return this;
+        }
+        
+        pure Builder setVariableCollection(VariableCollection variableCollection)
+        {
+            this.variableCollection = variableCollection;
+
+            return this;
+        }
+        
+        Builder setVariables(Variable[] variables)
+        {
+            this.variableCollection.set(variables);
+
+            return this;
+        }
+        
+        Builder addVariable(Variable variable)
+        {
+            this.variableCollection.add(variable);
+
+            return this;
+        }
+
+        Eco getEco()
+        {
+            return new Eco(receivers, getContent(), getConfig());
+        }
+
+        Pro getPro()
+        {
+            return new Pro(sender, receivers, getContent(), getConfig());
+        }
+
+        TwoWay getTwoWay()
+        {
+            return new TwoWay(receivers, getContent(), getConfig());
+        }
+
+        private:
+            Config getConfig()
+            {
+                return Config(charset, normalize, single);
+            }
+
+            Content getContent()
+            {
+                Content content = this.content;
+
+                if (!empty(variableCollection.all())) {
+                    if(cast(Pattern)this.content) {
+                        content = new Pattern(this.content.getValue(), this.variableCollection);
+                    } else {
+                        content = new Content(this.content.getValue(), this.variableCollection);
+                    }
+                }
+                
+                return content;
+            }
 }
 
 class SendSms : Method
@@ -272,38 +296,37 @@ class SendSms : Method
         RequestBuilder requestBuilder = new RequestBuilder().setPath(path);
 
         if (sms.getSender().name) {
-            requestBuilder.addParameter(new Parameter(PARAMETER.FROM, text(sms.getSender())));
+            requestBuilder.setParameter(new Parameter(PARAMETER.FROM, text(sms.getSender())));
         } else {
-            requestBuilder.addParameter(new Parameter(PARAMETER.FROM, sms.getType()));
+            requestBuilder.setParameter(new Parameter(PARAMETER.FROM, sms.getType()));
         }
 
         foreach (Receiver receiver; sms.getReceivers()) {
             receivers ~= text(receiver);
         }
 
-        requestBuilder.addParameter(new Parameter(PARAMETER.TO, receivers));
+        requestBuilder.setParameter(new Parameter(PARAMETER.TO, receivers));
 
-        if (sms.charset != CHARSET.DEFAULT) {
-            requestBuilder.addParameter(new Parameter(PARAMETER.ENCODING, sms.charset));
+        if (sms.getConfig().charset != CHARSET.DEFAULT) {
+            requestBuilder.setParameter(new Parameter(PARAMETER.ENCODING, sms.getConfig().charset));
         }
 
-        if (sms.normalize) {
-            requestBuilder.addParameter(new Parameter(PARAMETER.NORMALIZE, "1"));
+        if (sms.getConfig().normalize) {
+            requestBuilder.setParameter(new Parameter(PARAMETER.NORMALIZE, "1"));
         }
 
-        if (text(sms.content) != string.init) {
-            requestBuilder.addParameter(new Parameter(PARAMETER.MESSAGE, text(sms.content)));
+        if (sms.getConfig().getSingle()) {
+            requestBuilder.setParameter(new Parameter(PARAMETER.SINGLE, "1"));
+        }
+
+        foreach (Variable variable; sms.getContent().getVariableCollection().all()) {
+            requestBuilder.setParameter(new Parameter(variable.getName(), variable.getValue()));
+        }
+
+        if (cast(Pattern)sms.getContent()) {
+            requestBuilder.setParameter(new Parameter(PARAMETER.TEMPLATE, sms.getContent().getValue()));
         } else {
-            requestBuilder
-                .addParameter(new Parameter(PARAMETER.PARAM_1, sms.pattern.getParameters().getFirst()))
-                .addParameter(new Parameter(PARAMETER.PARAM_2, sms.pattern.getParameters().getSecond()))
-                .addParameter(new Parameter(PARAMETER.PARAM_3, sms.pattern.getParameters().getThird()))
-                .addParameter(new Parameter(PARAMETER.PARAM_4, sms.pattern.getParameters().getFourth()))
-                .addParameter(new Parameter(PARAMETER.TEMPLATE, sms.pattern.getName()));
-
-            if (sms.pattern.getSingle()) {
-                requestBuilder.addParameter(new Parameter(PARAMETER.SINGLE, "1"));
-            }
+            requestBuilder.setParameter(new Parameter(PARAMETER.MESSAGE, sms.getContent().getValue()));
         }
 
         return requestBuilder;

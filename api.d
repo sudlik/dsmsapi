@@ -1,6 +1,5 @@
 module dsmsapi.api;
 
-import std.stdio : writeln;
 import std.conv          : text;
 import std.digest.digest : toHexString;
 import std.digest.md     : md5Of;
@@ -93,12 +92,12 @@ class Api
                 .setProtocol(protocol)
                 .setAgent(agent)
                 .setPort(port)
-                .addParameter(new Parameter(PARAMETER.USERNAME, user.getName()))
-                .addParameter(new Parameter(PARAMETER.PASSWORD, text(toHexString(user.getHash()))))
-                .addParameter(new Parameter(PARAMETER.FORMAT, format));
+                .setParameter(new Parameter(PARAMETER.USERNAME, user.getName()))
+                .setParameter(new Parameter(PARAMETER.PASSWORD, text(toHexString(user.getHash()))))
+                .setParameter(new Parameter(PARAMETER.FORMAT, format));
 
             if (test) {
-                requestBuilder.addParameter(new Parameter(PARAMETER.TEST, "1"));
+                requestBuilder.setParameter(new Parameter(PARAMETER.TEST, "1"));
             }
 
             return Response(requestBuilder.getRequest().send());
