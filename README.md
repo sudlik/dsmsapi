@@ -8,6 +8,28 @@ dmd 2.065
 `git clone git@github.com:sudlik/dsmsapi.git`
 ## Examples
 ### SMS
+#!/usr/bin/env rdmd
+
+import std.stdio : writeln;
+
+import dsmsapi.core : Content, PARAMETER, Receiver;
+import dsmsapi.api  : Api, HOST, Response, User;
+import dsmsapi.sms  : Builder, CHARSET, Config, Eco, SendSms, TYPE, Variable;
+
+void main()
+{
+    Config     config    = Config(CHARSET.UTF_8, true, true);
+    Content    content   = new Content("Hello [%1%]!");
+    Receiver[] receivers = [Receiver(555012345)];
+    User       user      = User("username", "password");
+    Eco        sms       = new Eco(receivers, content, config);
+    SendSms    sendSms   = new SendSms(sms);
+    Api        api       = new Api(user, HOST.PLAIN_1, true);
+    Response   response  = api.execute(sendSms);
+
+    writeln(response.getContent());
+}
+### SMS builder
 ``` D
 #!/usr/bin/env rdmd
 
