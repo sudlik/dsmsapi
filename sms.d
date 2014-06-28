@@ -139,27 +139,28 @@ struct Config
         bool    normalize;
         bool    single;
 
-    pure this(CHARSET charset = CHARSET.DEFAULT, bool normalize = false, bool single = false)
-    {
-        this.charset   = charset;
-        this.normalize = normalize;
-        this.single    = single;
-    }
+    public:
+        pure this(CHARSET charset = CHARSET.DEFAULT, bool normalize = false, bool single = false)
+        {
+            this.charset   = charset;
+            this.normalize = normalize;
+            this.single    = single;
+        }
 
-    pure getCharset()
-    {
-        return charset;
-    }
+        pure getCharset()
+        {
+            return charset;
+        }
 
-    pure getNormalize()
-    {
-        return normalize;
-    }
+        pure getNormalize()
+        {
+            return normalize;
+        }
 
-    pure getSingle()
-    {
-        return single;
-    }
+        pure getSingle()
+        {
+            return single;
+        }
 }
 
 struct Builder
