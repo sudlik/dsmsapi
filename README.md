@@ -7,27 +7,53 @@ dmd 2.065
 ## Installation
 `git clone git@github.com:sudlik/dsmsapi.git`
 ## Examples
+### Short
+``` D
+#!/usr/bin/env rdmd
+
+import dsmsapi.core : Content, Receiver;
+import dsmsapi.api  : Api, User;
+import dsmsapi.sms  : Builder, Eco, SendSms;
+
+void main()
+{
+    new Api(User("username", "password"))
+        .execute(
+            new SendSms(
+                Builder(new Content("Hello [%1%]!"), Receiver(555012345))
+                    .getEco()
+            )
+        );
+}
 ### SMS
+``` D
 #!/usr/bin/env rdmd
 
 import std.stdio : writeln;
 
-import dsmsapi.core : Content, PARAMETER, Receiver;
-import dsmsapi.api  : Api, HOST, Response, User;
-import dsmsapi.sms  : Builder, CHARSET, Config, Eco, SendSms, TYPE, Variable;
+import dsmsapi.core : Content, Receiver;
+import dsmsapi.api  : Api, Response, User;
+import dsmsapi.sms  : Config, Eco, SendSms;
 
 void main()
 {
-    Config     config    = Config(CHARSET.UTF_8, true, true);
-    Content    content   = new Content("Hello [%1%]!");
-    Receiver[] receivers = [Receiver(555012345)];
-    User       user      = User("username", "password");
+    int        phone     = 555012345;
+    Receiver[] receivers = [Receiver(phone)];
+    string     text      = "Hello [%1%]!";
+    Content    content   = new Content(text);
+    Config     config    = Config();
     Eco        sms       = new Eco(receivers, content, config);
     SendSms    sendSms   = new SendSms(sms);
-    Api        api       = new Api(user, HOST.PLAIN_1, true);
-    Response   response  = api.execute(sendSms);
 
-    writeln(response.getContent());
+    string username = "username";
+    string password = "password";
+    User   user     = User(username, password);
+    Api    api      = new Api(user);
+
+    Response response = api.execute(sendSms);
+    string   result   = response.getContent();
+
+    writeln(result);
 }
 ### SMS builder
 ``` D
@@ -35,29 +61,60 @@ void main()
 
 import std.stdio : writeln;
 
-import dsmsapi.core : Content, PARAMETER, Receiver;
-import dsmsapi.api  : Api, HOST, Response, User;
-import dsmsapi.sms  : Builder, CHARSET, Eco, SendSms, TYPE, Variable;
+import dsmsapi.core : Content, Receiver;
+import dsmsapi.api  : Api, Response, User;
+import dsmsapi.sms  : Builder, Eco, SendSms;
 
 void main()
 {
-    Content  content  = new Content("Hello [%1%]!");
-    Receiver receiver = Receiver(555012345);
-    User     user     = User("username", "password");
-
-    Eco sms = new Builder(content)
-        .setNormalize(true)
-        .setSingle(true)
-        .setCharset(CHARSET.UTF_8)
-        .addReceiver(receiver)
-        .addVariable(Variable(PARAMETER.PARAM_1, "world"))
-        .getEco();
-
+    int      phone    = 555012345;
+    Receiver receiver = Receiver(phone);
+    string   text     = "Hello [%1%]!";
+    Content  content  = new Content(text);
+    Builder  builder  = Builder(content, receiver);
+    Eco      sms      = builder.getEco();
     SendSms  sendSms  = new SendSms(sms);
-    Api      api      = new Api(user, HOST.PLAIN_1, true);
-    Response response = api.execute(sendSms);
 
-    writeln(response.getContent());
+    string username = "username";
+    string password = "password";
+    User   user     = User(username, password);
+    Api    api      = new Api(user);
+
+    Response response = api.execute(sendSms);
+    string   result   = response.getContent();
+
+    writeln(result);
+}
+```
+### SMS Pattern
+``` D
+#!/usr/bin/env rdmd
+
+import std.stdio : writeln;
+
+import dsmsapi.core : Receiver;
+import dsmsapi.api  : Api, Response, User;
+import dsmsapi.sms  : Config, Eco, Pattern, SendSms;
+
+void main()
+{
+    int        phone     = 555012345;
+    Receiver[] receivers = [Receiver(phone)];
+    string     name      = "Hello world";
+    Pattern    pattern   = new Pattern(name);
+    Config     config    = Config();
+    Eco        sms       = new Eco(receivers, pattern, config);
+    SendSms    sendSms   = new SendSms(sms);
+
+    string username = "username";
+    string password = "password";
+    User   user     = User(username, password);
+    Api    api      = new Api(user);
+
+    Response response = api.execute(sendSms);
+    string   result   = response.getContent();
+
+    writeln(result);
 }
 ```
 ### MMS
@@ -85,37 +142,6 @@ void main()
     writeln(response.getContent());
 }
 ```
-### Pattern
-``` D
-#!/usr/bin/env rdmd
-
-import std.stdio : writeln;
-
-import dsmsapi.core : PARAMETER, Receiver;
-import dsmsapi.api  : Api, HOST, Response, User;
-import dsmsapi.sms  : Builder, CHARSET, Eco, Pattern, SendSms, TYPE, Variable;
-
-void main()
-{
-    Pattern  pattern  = new Pattern("Hello world");
-    Receiver receiver = Receiver(555012345);
-    User     user     = User("username", "password");
-
-    Eco sms = new Builder(pattern)
-        .setNormalize(true)
-        .setSingle(true)
-        .setCharset(CHARSET.UTF_8)
-        .addReceiver(receiver)
-        .addVariable(Variable(PARAMETER.PARAM_1, "world"))
-        .getEco();
-
-    SendSms  sendSms  = new SendSms(sms);
-    Api      api      = new Api(user, HOST.PLAIN_1, true);
-    Response response = api.execute(sendSms);
-
-    writeln(response.getContent());
-}
-```
 ## Features
 ### Main
 - [x] sending MMS
@@ -130,6 +156,7 @@ void main()
 - [ ] SMIL validator
 - [x] host switch
 - [x] test request
+- [ ] host auto-switch
 
 ### SMS
 - [x] charset (encoding)
@@ -193,7 +220,6 @@ void main()
  * consider use contracts
  * improve `Response`
  * move `RequestBuilder` to separate repository
- * consider use immutable
  * add support for subusers and sender fields (http://smsapi.pl/assets/files/api/SMSAPI_http_EXT.pdf)
  * add support for phonebook (http://smsapi.pl/assets/files/api/SMSAPI_phonebook.pdf)
  * improve `SendSms`
@@ -203,3 +229,7 @@ void main()
  * redesign `mms.d` like `sms.d`
  * rethink `class` and `struct` usage
  * add timers to debug mode (http://wiki.dlang.org/Timing_Code)
+ * rethink current visibility (http://dlang.org/attribute.html#ProtectionAttribute)
+ * add custom exception classes
+ * create ReceiverSet that can not be empty
+ * use custom exceptions

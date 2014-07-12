@@ -99,36 +99,31 @@ struct VariableCollection
 
 class Content
 {
-    private:
-        string value;
-        VariableCollection variableCollection = VariableCollection();
+    private {
+        string             value;
+        VariableCollection variableCollection;
+    }
 
-    public:
-        pure this(string value)
-        {
-            this.value = value;
-        }
+    pure this(string value, VariableCollection variableCollection = VariableCollection())
+    {
+        this.value = value;
+        this.variableCollection = variableCollection;
+    }
 
-        pure this(string value, VariableCollection variableCollection)
-        {
-            this.value = value;
-            this.variableCollection = variableCollection;
-        }
+    override pure string toString()
+    {
+        return value;
+    }
 
-        override pure string toString()
-        {
-            return value;
-        }
+    pure string getValue()
+    {
+        return value;
+    }
 
-        pure string getValue()
-        {
-            return value;
-        }
-
-        pure VariableCollection getVariableCollection()
-        {
-            return variableCollection;
-        }
+    pure VariableCollection getVariableCollection()
+    {
+        return variableCollection;
+    }
 }
 
 abstract class Message
