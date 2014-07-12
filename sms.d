@@ -38,22 +38,7 @@ enum TYPE : string
 
 struct Sender
 {
-    private string name;
-
-    pure this(string name)
-    {
-        this.name = name;
-    }
-
-    pure string toString()
-    {
-        return name;
-    }
-
-    pure string getName()
-    {
-        return name;
-    }
+    immutable string name;
 }
 
 class Pattern : Content
@@ -71,26 +56,11 @@ class Pattern : Content
 
 abstract class Sms : Message
 {
-    private:
+    immutable {
         Config config;
         Sender sender;
         TYPE   type;
-
-    public:
-        pure Sender getSender()
-        {
-            return sender;
-        }
-
-        pure TYPE getType()
-        {
-            return type;
-        }
-
-        pure Config getConfig()
-        {
-            return config;
-        }
+    }
 
     protected:
         this(TYPE type, Sender sender, Receiver[] receivers, Content content, Config config)
@@ -134,149 +104,146 @@ class TwoWay : Sms
 
 struct Config
 {
-    private:
+    immutable:
         CHARSET charset;
         bool    normalize;
         bool    single;
-
-    public:
-        pure this(CHARSET charset = CHARSET.DEFAULT, bool normalize = false, bool single = false)
-        {
-            this.charset   = charset;
-            this.normalize = normalize;
-            this.single    = single;
-        }
-
-        pure getCharset()
-        {
-            return charset;
-        }
-
-        pure getNormalize()
-        {
-            return normalize;
-        }
-
-        pure getSingle()
-        {
-            return single;
-        }
 }
 
 struct Builder
 {
-    private:
-        CHARSET            charset = CHARSET.DEFAULT;
-        Content            content;
-        bool               normalize = false;
+    private {
+        CHARSET            charset            = CHARSET.DEFAULT;
+        bool               normalize          = false;
+        bool               single             = false;
         VariableCollection variableCollection = VariableCollection();
-        Receiver[]         receivers;
-        Sender             sender;
-        bool               single = false;
 
-    public:
-        pure this(Sender sender, Content content)
-        {
-            this.sender  = sender;
-            this.content = content;
-        }
+        Content    content;
+        Receiver[] receivers;
+        Sender     sender;
+    }
 
-        pure this(Content content)
-        {
-            this.content = content;
-        }
+    this(Sender sender, Content content, Receiver[] receivers)
+    {
+        this.sender  = sender;
+        this.content = content;
 
-        pure Builder setNormalize(bool normalize)
-        {
-            this.normalize = normalize;
+        setReceivers(receivers);
+    }
 
-            return this;
-        }
-        
-        pure Builder setSingle(bool single)
-        {
-            this.single = single;
+    this(Content content, Receiver[] receivers)
+    {
+        this.content = content;
 
-            return this;
-        }
-        
-        pure Builder setCharset(CHARSET charset)
-        {
-            this.charset = charset;
+        setReceivers(receivers);
+    }
 
-            return this;
-        }
-        
-        pure Builder addReceiver(Receiver receiver)
-        {
-            this.receivers ~= receiver;
+    pure this(Content content, Receiver receiver)
+    {
+        this.content   = content;
+        this.receivers = [receiver];
+    }
+    
+    pure Builder setCharset(CHARSET charset)
+    {
+        this.charset = charset;
 
-            return this;
-        }
-        
-        pure Builder setReceivers(Receiver[] receivers)
-        {
+        return this;
+    }
+    
+    pure Builder setNormalize(bool normalize)
+    {
+        this.normalize = normalize;
+
+        return this;
+    }
+    
+    pure Builder setSingle(bool single)
+    {
+        this.single = single;
+
+        return this;
+    }
+    
+    pure Builder setContent(Content content)
+    {
+        this.content = content;
+
+        return this;
+    }
+    
+    Builder setReceivers(Receiver[] receivers)
+    {
+        if (empty(receivers)) {
+            throw new Exception("Receivers can not be empty");
+        } else {
             this.receivers = receivers;
-
-            return this;
         }
-        
-        pure Builder setVariableCollection(VariableCollection variableCollection)
+
+        return this;
+    }
+    
+    pure Builder addReceiver(Receiver receiver)
+    {
+        this.receivers ~= receiver;
+
+        return this;
+    }
+    
+    pure Builder setVariables(VariableCollection variables)
+    {
+        variableCollection = variables;
+
+        return this;
+    }
+    
+    Builder setVariables(Variable[] variables)
+    {
+        variableCollection.set(variables);
+
+        return this;
+    }
+    
+    Builder addVariable(Variable variable)
+    {
+        variableCollection.add(variable);
+
+        return this;
+    }
+
+    Eco getEco()
+    {
+        return new Eco(receivers, getContent(), getConfig());
+    }
+
+    Pro getPro()
+    {
+        return new Pro(sender, receivers, getContent(), getConfig());
+    }
+
+    TwoWay getTwoWay()
+    {
+        return new TwoWay(receivers, getContent(), getConfig());
+    }
+
+    private:
+        Config getConfig()
         {
-            this.variableCollection = variableCollection;
-
-            return this;
+            return Config(charset, normalize, single);
         }
-        
-        Builder setVariables(Variable[] variables)
+
+        Content getContent()
         {
-            this.variableCollection.set(variables);
-
-            return this;
-        }
-        
-        Builder addVariable(Variable variable)
-        {
-            this.variableCollection.add(variable);
-
-            return this;
-        }
-
-        Eco getEco()
-        {
-            return new Eco(receivers, getContent(), getConfig());
-        }
-
-        Pro getPro()
-        {
-            return new Pro(sender, receivers, getContent(), getConfig());
-        }
-
-        TwoWay getTwoWay()
-        {
-            return new TwoWay(receivers, getContent(), getConfig());
-        }
-
-        private:
-            Config getConfig()
-            {
-                return Config(charset, normalize, single);
-            }
-
-            Content getContent()
-            {
-                Content content = this.content;
-
-                if (!empty(variableCollection.all())) {
-                    if(cast(Pattern)this.content) {
-                        content = new Pattern(this.content.getValue(), this.variableCollection);
-                    } else {
-                        content = new Content(this.content.getValue(), this.variableCollection);
-                    }
+            if (!empty(variableCollection.all())) {
+                if(cast(Pattern)this.content) {
+                    return new Pattern(this.content.getValue(), this.variableCollection);
+                } else {
+                    return new Content(this.content.getValue(), this.variableCollection);
                 }
-                
-                return content;
+            } else {
+                return this.content;
             }
+        }
 }
 
 class SendSms : Method
@@ -296,38 +263,38 @@ class SendSms : Method
 
         RequestBuilder requestBuilder = new RequestBuilder().setPath(path);
 
-        if (sms.getSender().name) {
-            requestBuilder.setParameter(new Parameter(PARAMETER.FROM, text(sms.getSender())));
+        if (sms.sender.name) {
+            requestBuilder.setParameter(new Parameter(PARAMETER.FROM, sms.sender.name));
         } else {
-            requestBuilder.setParameter(new Parameter(PARAMETER.FROM, sms.getType()));
+            requestBuilder.setParameter(new Parameter(PARAMETER.FROM, sms.type));
         }
 
-        foreach (Receiver receiver; sms.getReceivers()) {
+        foreach (Receiver receiver; sms.receivers) {
             receivers ~= text(receiver);
         }
 
         requestBuilder.setParameter(new Parameter(PARAMETER.TO, receivers));
 
-        if (sms.getConfig().charset != CHARSET.DEFAULT) {
-            requestBuilder.setParameter(new Parameter(PARAMETER.ENCODING, sms.getConfig().charset));
+        if (sms.config.charset != CHARSET.DEFAULT) {
+            requestBuilder.setParameter(new Parameter(PARAMETER.ENCODING, sms.config.charset));
         }
 
-        if (sms.getConfig().normalize) {
+        if (sms.config.normalize) {
             requestBuilder.setParameter(new Parameter(PARAMETER.NORMALIZE, "1"));
         }
 
-        if (sms.getConfig().getSingle()) {
+        if (sms.config.single) {
             requestBuilder.setParameter(new Parameter(PARAMETER.SINGLE, "1"));
         }
 
-        foreach (Variable variable; sms.getContent().getVariableCollection().all()) {
+        foreach (Variable variable; sms.content.getVariableCollection().all()) {
             requestBuilder.setParameter(new Parameter(variable.getName(), variable.getValue()));
         }
 
-        if (cast(Pattern)sms.getContent()) {
-            requestBuilder.setParameter(new Parameter(PARAMETER.TEMPLATE, sms.getContent().getValue()));
+        if (cast(Pattern)sms.content) {
+            requestBuilder.setParameter(new Parameter(PARAMETER.TEMPLATE, sms.content.getValue()));
         } else {
-            requestBuilder.setParameter(new Parameter(PARAMETER.MESSAGE, sms.getContent().getValue()));
+            requestBuilder.setParameter(new Parameter(PARAMETER.MESSAGE, sms.content.getValue()));
         }
 
         return requestBuilder;

@@ -77,7 +77,7 @@ class Api
         User user;
 
     public:
-        pure this(User user, HOST host, bool test = false)
+        pure this(User user, HOST host = HOST.PLAIN_1, bool test = false)
         {
             this.user = user;
             this.host = host;
