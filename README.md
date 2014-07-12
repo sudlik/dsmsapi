@@ -25,6 +25,7 @@ void main()
             )
         );
 }
+```
 ### SMS
 ``` D
 #!/usr/bin/env rdmd
@@ -55,6 +56,7 @@ void main()
 
     writeln(result);
 }
+```
 ### SMS builder
 ``` D
 #!/usr/bin/env rdmd
