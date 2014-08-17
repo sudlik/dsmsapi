@@ -57,7 +57,7 @@ class Mms : Message
         }
 }
 
-class SendMms : Method
+class Send : Method
 {
     static const PATH path = PATH.MMS;
 

@@ -20,7 +20,7 @@ void main()
     new Api(User("username", "password"))
         .execute(
             new SendSms(
-                Builder(new Content("Hello [%1%]!"), Receiver(555012345))
+                Builder(new Content("Hello world!"), Receiver(555012345))
                     .getEco()
             )
         );
@@ -29,31 +29,46 @@ void main()
 ``` D
 #!/usr/bin/env rdmd
 
-import std.stdio : writeln;
+import std.stdio : writefln;
 
-import dsmsapi.core : Content, Receiver;
-import dsmsapi.api  : Api, Response, User;
-import dsmsapi.sms  : Config, Eco, SendSms;
+import dsmsapi.core : Content, HOST, Receiver;
+import dsmsapi.api  : Api, Item, Response, User;
+import dsmsapi.sms  : Config, Eco, Send;
 
 void main()
 {
     int        phone     = 555012345;
-    Receiver[] receivers = [Receiver(phone)];
-    string     text      = "Hello [%1%]!";
+    Receiver   receiver  = Receiver(phone);
+    Receiver[] receivers = [receiver];
+    string     text      = "Hello world!";
     Content    content   = new Content(text);
     Config     config    = Config();
     Eco        sms       = new Eco(receivers, content, config);
-    SendSms    sendSms   = new SendSms(sms);
+    Send       send      = new Send(sms);
 
     string username = "username";
     string password = "password";
     User   user     = User(username, password);
     Api    api      = new Api(user);
 
-    Response response = api.execute(sendSms);
-    string   result   = response.getContent();
+    Response response = api.execute(send);
 
-    writeln(result);
+    if (response.isSuccess()) {
+        writefln(`Success! Count: %d`, response.getCount());
+
+        foreach (int i, Item item; response.getList()) {
+            writefln(
+                `%d. Id: %d, points: %f, number: %d, status: %s.`,
+                i + 1,
+                item.id,
+                item.points,
+                item.number,
+                item.status
+            );
+        }
+    } else {
+        writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
+    }
 }
 ### SMS builder
 ``` D
@@ -69,7 +84,7 @@ void main()
 {
     int      phone    = 555012345;
     Receiver receiver = Receiver(phone);
-    string   text     = "Hello [%1%]!";
+    string   text     = "Hello world!";
     Content  content  = new Content(text);
     Builder  builder  = Builder(content, receiver);
     Eco      sms      = builder.getEco();
@@ -122,24 +137,74 @@ void main()
 #!/usr/bin/env rdmd
 
 import std.file  : readText;
-import std.stdio : writeln;
+import std.stdio : writefln;
 
-import dsmsapi.core : Content, Receiver;
-import dsmsapi.api  : Api, HOST, Response, User;
-import dsmsapi.mms  : SendMms, Mms, Subject;
+import dsmsapi.core : Content, HOST, Receiver;
+import dsmsapi.api  : Api, Item, Response, User;
+import dsmsapi.mms  : Send, Mms, Subject;
 
 void main()
 {
-    Content  content  = new Content(readText("mms.smil"));
-    Receiver receiver = Receiver(555012345);
-    Subject  subject  = Subject("Hello world!");
-    User     user     = User("username", "password");
-    Mms      mms      = new Mms(subject, receiver, content);
-    SendMms  sendMms  = new SendMms(mms);
-    Api      api      = new Api(user, HOST.PLAIN_1, true);
-    Response response = api.execute(sendMms);
+    int        phone     = 555012345;
+    Receiver   receiver  = Receiver(phone);
+    Receiver[] receivers = [receiver];
+    string     file      = "mms.smil";
+    string     data      = readText(file);
+    Content    content   = new Content(data);
+    string     name      = "Hello world!";
+    Subject    subject   = Subject(name);
+    Mms        mms       = new Mms(subject, receiver, content);
+    Send       send      = new Send(mms);
 
-    writeln(response.getContent());
+    string username = "username";
+    string password = "password";
+    User   user     = User(username, password);
+    Api    api      = new Api(user);
+
+    Response response = api.execute(send);
+
+    if (response.isSuccess()) {
+        writefln(`Success! Count: %d`, response.getCount());
+
+        foreach (int i, Item item; response.getList()) {
+            writefln(
+                `%d. Id: %d, points: %f, number: %d, status: %s.`,
+                i + 1,
+                item.id,
+                item.points,
+                item.number,
+                item.status
+            );
+        }
+    } else {
+        writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
+    }
+}
+```
+### HLR
+``` D
+#!/usr/bin/env rdmd
+
+import std.stdio : writefln;
+
+import dsmsapi.core : Content, HOST, Receiver;
+import dsmsapi.api  : Api, Item, Response, User;
+import dsmsapi.hlr  : Check, Hlr;
+
+void main()
+{
+    int    phone  = 555012345;
+    int[]  phones = [phone];
+    string idx    = "test1";
+    Hlr    hlr    = Hlr(phones, idx);
+    Check  check  = new Check(hlr);
+
+    string username = "username";
+    string password = "password";
+    User   user     = User(username, password);
+    Api    api      = new Api(user);
+
+    Response response = api.execute(check);
 }
 ```
 ## Features
@@ -151,12 +216,16 @@ void main()
 - [ ] multithreading
 - [ ] SSL
 - [ ] WAP PUSH (udh)
-- [ ] HLR
+- [x] HLR
 - [ ] SMIL generator
 - [ ] SMIL validator
 - [x] host switch
 - [x] test request
 - [ ] host auto-switch
+- [ ] idx generator
+- [ ] subusers
+- [ ] sender fields
+- [ ] phonebook
 
 ### SMS
 - [x] charset (encoding)
@@ -208,8 +277,8 @@ void main()
 - [ ] check_idx
 
 ### HLR
-- [ ] number
-- [ ] idx
+- [x] number
+- [x] idx
 
 ## ToDo
  * add docs (http://dlang.org/ddoc.html)
@@ -218,11 +287,8 @@ void main()
  * use dub (http://code.dlang.org)
  * versions tags
  * consider use contracts
- * improve `Response`
  * move `RequestBuilder` to separate repository
- * add support for subusers and sender fields (http://smsapi.pl/assets/files/api/SMSAPI_http_EXT.pdf)
- * add support for phonebook (http://smsapi.pl/assets/files/api/SMSAPI_phonebook.pdf)
- * improve `SendSms`
+ * rethink Methods
  * consider use interfaces
  * consider use unions
  * use `RedBlackTree` for `parameters` in `RequestBuilder`
@@ -232,4 +298,4 @@ void main()
  * rethink current visibility (http://dlang.org/attribute.html#ProtectionAttribute)
  * add custom exception classes
  * create ReceiverSet that can not be empty
- * use custom exceptions
+ * add support for HLR responses
