@@ -3,9 +3,6 @@ module dsmsapi.core;
 debug import std.string : strip;
 debug import std.stdio  : writeln;
 
-debug(WITHOUT_SEND) import std.string : strip;
-debug(WITHOUT_SEND) import std.stdio  : writeln;
-
 import std.array        : empty;
 import std.conv         : to;
 import std.socketstream : SocketStream;
@@ -157,8 +154,9 @@ enum HOST : string
 
 enum PATH : string
 {
-    SMS = "sms.do",
+    HLR = "hlr.do",
     MMS = "mms.do",
+    SMS = "sms.do",
 }
 
 enum AGENT : string
@@ -200,6 +198,8 @@ enum PARAMETER : string
     TEMPLATE  = "template",
     SUBJECT   = "subject",
     SMIL      = "smil",
+    NUMBER    = "number",
+    IDX       = "idx",
 }
 
 class Parameter
@@ -356,35 +356,35 @@ class Request
         {
             this.socketStream = new SocketStreamFactory().create(host, port);
             this.headers = headers;
+
+            debug {
+                writeln("[DEBUG] REQUEST HEADERS:");
+                writeln(strip(headers));
+            }
         }
 
         string send()
         {
             string content;
 
-            debug {
-                writeln("[DEBUG] REQUEST HEADERS:");
-                writeln(headers);
-            }
-
             debug (WITHOUT_SEND) {
-                writeln("[DEBUG] REQUEST HEADERS:");
-                writeln(strip(headers));
-                writeln("[DEBUG] REQUEST HAS NOT BEEN SENT!");
+                writeln("[DEBUG] WITHOUT SEND");
+
+                return `0{"error":0,"message":""}0`;
             } else {
                 socketStream.writeString(headers);
                 
                 while (!socketStream.eof()) {
                     content ~= socketStream.readLine();
                 }
-            }
 
-            debug {
-                writeln("[DEBUG] RESPONSE:");
-                writeln(content);
-            }
+                debug {
+                    writeln("[DEBUG] RESPONSE:");
+                    writeln(content);
+                }
 
-            return content;
+                return content;
+            }
         }
 }
 

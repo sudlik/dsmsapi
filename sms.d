@@ -246,7 +246,7 @@ struct Builder
         }
 }
 
-class SendSms : Method
+class Send : Method
 {
     static const PATH path = PATH.SMS;
 
