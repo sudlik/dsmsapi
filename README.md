@@ -25,6 +25,7 @@ void main()
             )
         );
 }
+```
 ### SMS
 ``` D
 #!/usr/bin/env rdmd
@@ -70,6 +71,7 @@ void main()
         writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
     }
 }
+```
 ### SMS builder
 ``` D
 #!/usr/bin/env rdmd
