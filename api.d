@@ -167,6 +167,5 @@ class Api
              * @todo
              */
             return Response(parseJSON(matchFirst(requestBuilder.getRequest().send(), pattern)[1]));
-
         }
 }

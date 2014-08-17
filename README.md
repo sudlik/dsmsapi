@@ -210,25 +210,6 @@ void main()
 }
 ```
 ## Features
-### Main
-- [x] sending MMS
-- [x] sending SMS
-- [ ] sending VMS
-- [x] multiple receivers
-- [ ] multithreading
-- [ ] SSL
-- [ ] WAP PUSH (udh)
-- [x] HLR
-- [ ] SMIL generator
-- [ ] SMIL validator
-- [x] host switch
-- [x] test request
-- [ ] host auto-switch
-- [ ] idx generator
-- [ ] subusers
-- [ ] sender fields
-- [ ] phonebook
-
 ### SMS
 - [x] charset (encoding)
 - [x] content (message)
@@ -257,6 +238,7 @@ void main()
 - [ ] date
 - [ ] idx
 - [ ] check_idx
+- [ ] WAP PUSH (udh)
 
 ### MMS
 - [x] content (SMIL)
@@ -281,6 +263,23 @@ void main()
 ### HLR
 - [x] number
 - [x] idx
+
+### Subusers
+
+### Sender fields
+
+### Phonebook
+
+### Other
+- [ ] multithreading
+- [ ] SSL support
+- [ ] SMIL generator
+- [ ] SMIL validator
+- [x] manage hosts
+- [x] test request
+- [ ] host auto-switch
+- [ ] idx generator
+- [ ] idx validator
 
 ## ToDo
  * add docs (http://dlang.org/ddoc.html)
