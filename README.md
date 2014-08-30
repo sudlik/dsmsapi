@@ -76,21 +76,21 @@ void main()
 ``` D
 #!/usr/bin/env rdmd
 
-import std.stdio : writeln;
+import std.stdio : writefln;
 
 import dsmsapi.core : Content, Receiver;
-import dsmsapi.api  : Api, Response, User;
-import dsmsapi.sms  : Builder, Eco, SendSms;
+import dsmsapi.api  : Api, Item, Response, User;
+import dsmsapi.sms  : Builder, Eco, Send;
 
 void main()
 {
     int      phone    = 555012345;
     Receiver receiver = Receiver(phone);
-    string   text     = "Hello world!";
+    string   text     = "Hello [%1%]!";
     Content  content  = new Content(text);
     Builder  builder  = Builder(content, receiver);
     Eco      sms      = builder.getEco();
-    SendSms  sendSms  = new SendSms(sms);
+    Send     sendSms  = new Send(sms);
 
     string username = "username";
     string password = "password";
@@ -98,20 +98,34 @@ void main()
     Api    api      = new Api(user);
 
     Response response = api.execute(sendSms);
-    string   result   = response.getContent();
 
-    writeln(result);
+    if (response.isSuccess()) {
+        writefln(`Success! Count: %d`, response.getCount());
+
+        foreach (int i, Item item; response.getList()) {
+            writefln(
+                `%d. Id: %d, points: %f, number: %d, status: %s.`,
+                i + 1,
+                item.id,
+                item.points,
+                item.number,
+                item.status
+            );
+        }
+    } else {
+        writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
+    }
 }
 ```
 ### SMS Pattern
 ``` D
 #!/usr/bin/env rdmd
 
-import std.stdio : writeln;
+import std.stdio : writefln;
 
 import dsmsapi.core : Receiver;
-import dsmsapi.api  : Api, Response, User;
-import dsmsapi.sms  : Config, Eco, Pattern, SendSms;
+import dsmsapi.api  : Api, Item, Response, User;
+import dsmsapi.sms  : Config, Eco, Pattern, Send;
 
 void main()
 {
@@ -121,7 +135,7 @@ void main()
     Pattern    pattern   = new Pattern(name);
     Config     config    = Config();
     Eco        sms       = new Eco(receivers, pattern, config);
-    SendSms    sendSms   = new SendSms(sms);
+    Send       sendSms   = new Send(sms);
 
     string username = "username";
     string password = "password";
@@ -129,9 +143,23 @@ void main()
     Api    api      = new Api(user);
 
     Response response = api.execute(sendSms);
-    string   result   = response.getContent();
 
-    writeln(result);
+    if (response.isSuccess()) {
+        writefln(`Success! Count: %d`, response.getCount());
+
+        foreach (int i, Item item; response.getList()) {
+            writefln(
+                `%d. Id: %d, points: %f, number: %d, status: %s.`,
+                i + 1,
+                item.id,
+                item.points,
+                item.number,
+                item.status
+            );
+        }
+    } else {
+        writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
+    }
 }
 ```
 ### MMS
