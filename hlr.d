@@ -11,18 +11,17 @@ struct Hlr
     private string pattern = `[a-zA-Z0-9]{0,255}`;
 
     immutable {
-        string idx;
-        int[]  numbers;
+        string[] idxes;
+        int[]    numbers;
     }
 
-    this(int[] numbers, string idx = "")
+    this(int[] numbers, string[] idxes = [])
     {
         this.numbers = to!(immutable int[])(numbers);
+        this.idxes = to!(immutable string[])(idxes);
 
-        if (idx != "") {
-            if (matchFirst(idx, pattern).length() == 1) {
-                this.idx = to!(immutable string)(idx);
-            } else {
+        foreach (string idx; idxes) {
+            if (matchFirst(idx, pattern).length() != 1) {
                 throw new Exception("Invalid idx (/" ~ pattern ~ "/)");
             }
         }
@@ -31,7 +30,12 @@ struct Hlr
 
 class Check : Method
 {
-    static const PATH path = PATH.HLR;
+    static const {
+        PATH path = PATH.HLR;
+        string
+            number_separator = ",",
+            idx_separator = "|";
+    }
 
     private Hlr hlr;
 
@@ -44,10 +48,10 @@ class Check : Method
     {
         RequestBuilder requestBuilder = new RequestBuilder()
             .setPath(path)
-            .setParameter(new Parameter(PARAMETER.NUMBER, join(to!(string[])(hlr.numbers), ",")));
+            .setParameter(new Parameter(PARAMETER.NUMBER, join(to!(string[])(hlr.numbers), number_separator)));
 
-        if (hlr.idx != "") {
-            requestBuilder.setParameter(new Parameter(PARAMETER.IDX, hlr.idx))
+        if (!empty(hlr.idxes)) {
+            requestBuilder.setParameter(new Parameter(PARAMETER.IDX, join(to!(string[])(hlr.idxes), idx_separator)));
         }
 
         return requestBuilder;

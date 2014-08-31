@@ -39,24 +39,52 @@ struct Response
             error   = response["error"].integer();
             message = response["message"].str();
         } else {
-            float points;
+            float points, price;
+            ulong id, number;
+            string status;
 
             success = true;
-            count   = response["count"].integer();
 
-            foreach (JSONValue value; response["list"].array()) {
-                if (value.type() == JSON_TYPE.FLOAT) {
-                    points = value["points"].floating();
-                } else {
-                    points = to!float(value["points"].str());
+            foreach (string key, JSONValue value; response) {
+                switch (key) {
+                    case "count":
+                        count = value.integer();
+                        break;
+                    case "list":
+                        foreach (JSONValue item; value.array()) {
+                            if (item.type() == JSON_TYPE.FLOAT) {
+                                points = item["points"].floating();
+                            } else {
+                                points = to!float(item["points"].str());
+                            }
+
+                            list ~= Item(
+                                to!ulong(item["id"].str()),
+                                points,
+                                to!ulong(item["number"].str()),
+                                item["status"].str()
+                            );
+                        }
+                        break;
+                    case "status":
+                        status = value.str();
+                        break;
+                    case "number":
+                        number = to!ulong(value.str());
+                        break;
+                    case "id":
+                        id = to!ulong(value.str());
+                        break;
+                    case "price":
+                        price = to!float(value.str());
+                        break;
+                    default:
+                        break;
                 }
+            }
 
-                list ~= Item(
-                    to!ulong(value["id"].str()),
-                    points,
-                    to!ulong(value["number"].str()),
-                    value["status"].str()
-                );
+            if (id != ulong.init) {
+                list ~= Item(id, price, number, status);
             }
         }
     }
@@ -163,9 +191,6 @@ class Api
                 requestBuilder.setParameter(new Parameter(PARAMETER.TEST, "1"));
             }
 
-            /**
-             * @todo
-             */
             return Response(parseJSON(matchFirst(requestBuilder.getRequest().send(), pattern)[1]));
         }
 }

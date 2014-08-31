@@ -217,17 +217,18 @@ void main()
 
 import std.stdio : writefln;
 
-import dsmsapi.core : Content, HOST, Receiver;
+import dsmsapi.core : Content, Receiver;
 import dsmsapi.api  : Api, Item, Response, User;
 import dsmsapi.hlr  : Check, Hlr;
 
 void main()
 {
-    int    phone  = 555012345;
-    int[]  phones = [phone];
-    string idx    = "test1";
-    Hlr    hlr    = Hlr(phones, idx);
-    Check  check  = new Check(hlr);
+    int      phone  = 555012345;
+    int[]    phones = [phone];
+    string   idx    = "test1";
+    string[] idxes  = [idx];
+    Hlr      hlr    = Hlr(phones, idxes);
+    Check    check  = new Check(hlr);
 
     string username = "username";
     string password = "password";
@@ -235,6 +236,23 @@ void main()
     Api    api      = new Api(user);
 
     Response response = api.execute(check);
+
+    if (response.isSuccess()) {
+        writefln(`Success! Count: %d`, response.getCount());
+
+        foreach (int i, Item item; response.getList()) {
+            writefln(
+                `%d. Id: %d, points: %f, number: %d, status: %s.`,
+                i + 1,
+                item.id,
+                item.points,
+                item.number,
+                item.status
+            );
+        }
+    } else {
+        writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
+    }
 }
 ```
 ## Features
@@ -328,3 +346,4 @@ void main()
  * add custom exception classes
  * create ReceiverSet that can not be empty
  * add support for HLR responses
+ * phone number validator
