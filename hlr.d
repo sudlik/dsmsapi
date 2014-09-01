@@ -34,7 +34,7 @@ class Check : Method
         PATH path = PATH.HLR;
         string
             number_separator = ",",
-            idx_separator = "|";
+            idx_separator = ",";
     }
 
     private Hlr hlr;
