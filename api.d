@@ -24,7 +24,7 @@ struct Response
         long count;
         long error;
         Item[] list;
-        string message;
+        string message = "No message";
         bool success = false;
     }
 
@@ -35,57 +35,44 @@ struct Response
             values[key] = value;
         }
 
-        if ("error" in values && "message" in values) {
-            error   = response["error"].integer();
-            message = response["message"].str();
-        } else {
-            float points, price;
-            ulong id, number;
-            string status;
+        if ("error" in values) {
+            error = response["error"].integer();
+
+            if ("message" in values) {
+                message = response["message"].str();
+            }
+        } else if ("count" in values && "list" in values) {
+            float points;
 
             success = true;
+            count = response["count"].integer();
 
-            foreach (string key, JSONValue value; response) {
-                switch (key) {
-                    case "count":
-                        count = value.integer();
-                        break;
-                    case "list":
-                        foreach (JSONValue item; value.array()) {
-                            if (item.type() == JSON_TYPE.FLOAT) {
-                                points = item["points"].floating();
-                            } else {
-                                points = to!float(item["points"].str());
-                            }
-
-                            list ~= Item(
-                                to!ulong(item["id"].str()),
-                                points,
-                                to!ulong(item["number"].str()),
-                                item["status"].str()
-                            );
-                        }
-                        break;
-                    case "status":
-                        status = value.str();
-                        break;
-                    case "number":
-                        number = to!ulong(value.str());
-                        break;
-                    case "id":
-                        id = to!ulong(value.str());
-                        break;
-                    case "price":
-                        price = to!float(value.str());
-                        break;
-                    default:
-                        break;
+            foreach (JSONValue item; response["list"].array()) {
+                if (item.type() == JSON_TYPE.FLOAT) {
+                    points = item["points"].floating();
+                } else {
+                    points = to!float(item["points"].str());
                 }
-            }
 
-            if (id != ulong.init) {
-                list ~= Item(id, price, number, status);
+                list ~= Item(
+                    to!ulong(item["id"].str()),
+                    points,
+                    to!ulong(item["number"].str()),
+                    item["status"].str()
+                );
             }
+        } else if ("id" in values && "price" in values && "number" in values && "status" in values) {
+            success = true;
+            count = 1;
+
+            list ~= Item(
+                to!ulong(response["id"].str()),
+                to!float(response["price"].str()),
+                to!ulong(response["number"].str()),
+                response["status"].str()
+            );
+        } else {
+            message = "Lib error: unexpected API response";
         }
     }
 
