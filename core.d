@@ -87,7 +87,7 @@ struct VariableCollection
                 throw new Exception("Variable already added");
             }
         }
-        
+
         variables ~= variable;
 
         return this;
@@ -150,6 +150,7 @@ enum HOST : string
 {
     PLAIN_1 = "api.smsapi.pl",
     PLAIN_2 = "api2.smsapi.pl",
+    LOCALHOST = "smsapi.localhost",
 }
 
 enum PATH : string
@@ -157,6 +158,7 @@ enum PATH : string
     HLR = "hlr.do",
     MMS = "mms.do",
     SMS = "sms.do",
+    VMS = "vms.do",
 }
 
 enum AGENT : string
@@ -181,25 +183,27 @@ enum PORT : ushort
 
 enum PARAMETER : string
 {
-    USERNAME  = "username",
-    PASSWORD  = "password",
-    FORMAT    = "format",
-    TEST      = "test",
-    TO        = "to",
-    FROM      = "from",
+    DATE      = "date",
     ENCODING  = "encoding",
-    NORMALIZE = "normalize",
+    FORMAT    = "format",
+    FROM      = "from",
+    IDX       = "idx",
     MESSAGE   = "message",
+    NORMALIZE = "normalize",
+    NUMBER    = "number",
     PARAM_1   = "param1",
     PARAM_2   = "param2",
     PARAM_3   = "param3",
     PARAM_4   = "param4",
+    PASSWORD  = "password",
     SINGLE    = "single",
-    TEMPLATE  = "template",
-    SUBJECT   = "subject",
     SMIL      = "smil",
-    NUMBER    = "number",
-    IDX       = "idx",
+    SUBJECT   = "subject",
+    TEMPLATE  = "template",
+    TEST      = "test",
+    TTS       = "tts",
+    TO        = "to",
+    USERNAME  = "username",
 }
 
 class Parameter
@@ -373,7 +377,7 @@ class Request
                 return `0{"error":0,"message":""}0`;
             } else {
                 socketStream.writeString(headers);
-                
+
                 while (!socketStream.eof()) {
                     content ~= socketStream.readLine();
                 }

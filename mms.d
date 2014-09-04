@@ -34,26 +34,32 @@ struct Subject
 
 class Mms : Message
 {
-    private Subject subject;
+    private
+        ulong   date;
+        Subject subject;
 
     public:
-        pure this(Subject subject, Receiver[] receivers, Content content)
+        pure this(Subject subject, Receiver[] receivers, Content content, ulong date = ulong.init)
         {
-            this.subject = subject;
+            this.subject   = subject;
             this.receivers = receivers;
-            this.content = content;
+            this.content   = content;
+            this.date      = date;
         }
 
-        pure this(Subject subject, Receiver receiver, Content content)
+        pure this(Subject subject, Receiver receiver, Content content, ulong date = ulong.init)
         {
-            this.subject = subject;
-            this.receivers = [receiver];
-            this.content = content;
+            this(subject, [receiver], content, date);
         }
 
         pure Subject getSubject()
         {
             return subject;
+        }
+
+        pure ulong getDate()
+        {
+            return date;
         }
 }
 
@@ -82,6 +88,10 @@ class Send : Method
             .setParameter(new Parameter(PARAMETER.TO, receivers))
             .setParameter(new Parameter(PARAMETER.SUBJECT, text(mms.getSubject())))
             .setParameter(new Parameter(PARAMETER.SMIL, text(mms.getContent())));
+
+        if (mms.getDate() != ulong.init) {
+            requestBuilder.setParameter(new Parameter(PARAMETER.DATE, text(mms.getDate())));
+        }
 
         return requestBuilder;
     }

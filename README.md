@@ -13,13 +13,13 @@ dmd 2.065
 
 import dsmsapi.core : Content, Receiver;
 import dsmsapi.api  : Api, User;
-import dsmsapi.sms  : Builder, Eco, SendSms;
+import dsmsapi.sms  : Builder, Eco, Send;
 
 void main()
 {
     new Api(User("username", "password"))
         .execute(
-            new SendSms(
+            new Send(
                 Builder(new Content("Hello world!"), Receiver(555012345))
                     .getEco()
             )
@@ -281,7 +281,7 @@ void main()
 - [ ] send vCard
 - [ ] check account points
 - [ ] notify_url
-- [ ] date
+- [x] date
 - [ ] idx
 - [ ] check_idx
 - [ ] WAP PUSH (udh)
@@ -290,7 +290,7 @@ void main()
 - [x] content (SMIL)
 - [x] subject
 - [ ] notify_url
-- [ ] date
+- [x] date
 - [ ] idx
 - [ ] check_idx
 
