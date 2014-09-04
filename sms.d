@@ -106,6 +106,7 @@ struct Config
 {
     immutable:
         CHARSET charset;
+        ulong   date;
         bool    normalize;
         bool    single;
 }
@@ -119,6 +120,7 @@ struct Builder
         VariableCollection variableCollection = VariableCollection();
 
         Content    content;
+        ulong      date;
         Receiver[] receivers;
         Sender     sender;
     }
@@ -143,35 +145,42 @@ struct Builder
         this.content   = content;
         this.receivers = [receiver];
     }
-    
+
     pure Builder setCharset(CHARSET charset)
     {
         this.charset = charset;
 
         return this;
     }
-    
+
     pure Builder setNormalize(bool normalize)
     {
         this.normalize = normalize;
 
         return this;
     }
-    
+
     pure Builder setSingle(bool single)
     {
         this.single = single;
 
         return this;
     }
-    
+
+    pure Builder setDate(ulong date)
+    {
+        this.date = date;
+
+        return this;
+    }
+
     pure Builder setContent(Content content)
     {
         this.content = content;
 
         return this;
     }
-    
+
     Builder setReceivers(Receiver[] receivers)
     {
         if (empty(receivers)) {
@@ -182,28 +191,28 @@ struct Builder
 
         return this;
     }
-    
+
     pure Builder addReceiver(Receiver receiver)
     {
         this.receivers ~= receiver;
 
         return this;
     }
-    
+
     pure Builder setVariables(VariableCollection variables)
     {
         variableCollection = variables;
 
         return this;
     }
-    
+
     Builder setVariables(Variable[] variables)
     {
         variableCollection.set(variables);
 
         return this;
     }
-    
+
     Builder addVariable(Variable variable)
     {
         variableCollection.add(variable);
@@ -229,7 +238,7 @@ struct Builder
     private:
         Config getConfig()
         {
-            return Config(charset, normalize, single);
+            return Config(charset, date, normalize, single);
         }
 
         Content getContent()
@@ -277,6 +286,10 @@ class Send : Method
 
         if (sms.config.charset != CHARSET.DEFAULT) {
             requestBuilder.setParameter(new Parameter(PARAMETER.ENCODING, sms.config.charset));
+        }
+
+        if (sms.config.date != ulong.init) {
+            requestBuilder.setParameter(new Parameter(PARAMETER.DATE, text(sms.config.date)));
         }
 
         if (sms.config.normalize) {

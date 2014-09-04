@@ -6,6 +6,7 @@ import std.digest.md     : md5Of;
 import std.json          : JSON_TYPE, JSONException, JSONValue, parseJSON;
 import std.regex         : matchFirst;
 import std.traits        : hasMember;
+import std.stdio    : writeln;
 
 import dsmsapi.core : AGENT, HOST, Method, METHOD, Parameter, PARAMETER, PORT, PROTOCOL, RequestBuilder;
 
@@ -48,10 +49,14 @@ struct Response
             count = response["count"].integer();
 
             foreach (JSONValue item; response["list"].array()) {
-                if (item.type() == JSON_TYPE.FLOAT) {
+                if (item["points"].type() == JSON_TYPE.FLOAT) {
                     points = item["points"].floating();
-                } else {
+                } else if (item["points"].type() == JSON_TYPE.INTEGER) {
+                    points = item["points"].integer();
+                } else if (item["points"].type() == JSON_TYPE.STRING) {
                     points = to!float(item["points"].str());
+                } else {
+                    message = "Lib error: unexpected API response";
                 }
 
                 list ~= Item(
@@ -145,7 +150,7 @@ class Api
         METHOD   method   = METHOD.POST;
         PORT     port     = PORT.P80;
         PROTOCOL protocol = PROTOCOL.HTTP_11;
-        string   pattern  = `[a-z0-9](\{.+\})0`;
+        string   pattern  = `[a-z0-9](\{.+\})`;
     }
 
     private:
@@ -178,6 +183,12 @@ class Api
                 requestBuilder.setParameter(new Parameter(PARAMETER.TEST, "1"));
             }
 
-            return Response(parseJSON(matchFirst(requestBuilder.getRequest().send(), pattern)[1]));
+            string response = matchFirst(requestBuilder.getRequest().send(), pattern)[1];
+
+            try {
+                return Response(parseJSON(response));
+            } catch (JSONException exception) {
+                return Response(parseJSON(`{"error":0,"message":"Lib error: unexpected API response"}`));
+            }
         }
 }
