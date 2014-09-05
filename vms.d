@@ -1,4 +1,4 @@
-module dsmsapi.mms;
+module dsmsapi.vms;
 
 import std.conv : text;
 
@@ -19,7 +19,6 @@ class Vms : Message
     public:
         pure this(Receiver[] receivers, Content content, ulong date = ulong.init)
         {
-            this.subject   = subject;
             this.receivers = receivers;
             this.content   = content;
             this.date      = date;
