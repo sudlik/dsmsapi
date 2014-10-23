@@ -150,7 +150,6 @@ enum HOST : string
 {
     PLAIN_1 = "api.smsapi.pl",
     PLAIN_2 = "api2.smsapi.pl",
-    ***REMOVED***
 }
 
 enum PATH : string

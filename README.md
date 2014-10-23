@@ -211,6 +211,51 @@ void main()
     }
 }
 ```
+### SMS
+``` D
+#!/usr/bin/env rdmd
+
+import std.stdio : writefln;
+
+import dsmsapi.api  : Api, Item, Response, User;
+import dsmsapi.core : Content, HOST, Receiver;
+import dsmsapi.vms  : Send, Vms;
+
+void main()
+{
+    int        phone     = 555012345;
+    Receiver   receiver  = Receiver(phone);
+    Receiver[] receivers = [receiver];
+    string     text      = "Hello world!";
+    Content    content   = new Content(text);
+    Vms        vms       = new Vms(receivers, content);
+    Send       send      = new Send(vms);
+
+    string username = "username";
+    string password = "password";
+    User   user     = User(username, password);
+    Api    api      = new Api(user);
+
+    Response response = api.execute(send);
+
+    if (response.isSuccess()) {
+        writefln(`Success! Count: %d`, response.getCount());
+
+        foreach (int i, Item item; response.getList()) {
+            writefln(
+                `%d. Id: %d, points: %f, number: %d, status: %s.`,
+                i + 1,
+                item.id,
+                item.points,
+                item.number,
+                item.status
+            );
+        }
+    } else {
+        writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
+    }
+}
+```
 ### HLR
 ``` D
 #!/usr/bin/env rdmd
@@ -302,7 +347,7 @@ void main()
 - [ ] skip_gsm
 - [ ] tts_lector
 - [ ] notify_url
-- [ ] date
+- [x] date
 - [ ] idx
 - [ ] check_idx
 
@@ -347,3 +392,4 @@ void main()
  * create ReceiverSet that can not be empty
  * add support for HLR responses
  * phone number validator
+ * use std.datetime to represent and manipulate dates
