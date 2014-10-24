@@ -215,6 +215,8 @@ void main()
 ``` D
 #!/usr/bin/env rdmd
 
+import std.conv     : to;
+import std.datetime : DateTime, SysTime;
 import std.stdio : writefln;
 
 import dsmsapi.api  : Api, Item, Response, User;
@@ -228,7 +230,8 @@ void main()
     Receiver[] receivers = [receiver];
     string     text      = "Hello world!";
     Content    content   = new Content(text);
-    Vms        vms       = new Vms(receivers, content);
+    ulong      date      = to!ulong(SysTime(DateTime(2014, 9, 25, 12, 0, 0)).toUnixTime());
+    Vms        vms       = new Vms(receivers, content, date);
     Send       send      = new Send(vms);
 
     string username = "username";
