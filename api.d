@@ -5,8 +5,6 @@ import std.digest.digest : toHexString;
 import std.digest.md     : md5Of;
 import std.json          : JSON_TYPE, JSONException, JSONValue, parseJSON;
 import std.regex         : matchFirst;
-import std.traits        : hasMember;
-import std.stdio    : writeln;
 
 import dsmsapi.core : AGENT, HOST, Method, METHOD, Parameter, PARAMETER, PORT, PROTOCOL, RequestBuilder;
 

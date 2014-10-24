@@ -17,12 +17,18 @@ class Vms : Message
     private ulong date;
 
     public:
+        pure this(Receiver receiver, Content content, ulong date = ulong.init)
+        {
+            this([receiver], content, date);
+        }
+
         pure this(Receiver[] receivers, Content content, ulong date = ulong.init)
         {
             this.receivers = receivers;
             this.content   = content;
             this.date      = date;
         }
+
         pure ulong getDate()
         {
             return date;
