@@ -1,32 +1,22 @@
 module dsmsapi.mms;
 
-import std.conv : text;
+import std.conv: text;
 
-import dsmsapi.core :
+import dsmsapi.core:
     Content,
     Message,
     Method,
     Parameter,
-    PARAMETER,
-    PATH,
+    ParamName,
+    Path,
     Receiver,
     RequestBuilder;
 
-struct Subject
+immutable struct Subject
 {
-    private string content;
-
-    pure this(string content)
-    {
-        this.content = content;
-    }
+    string content;
 
     pure string toString()
-    {
-        return content;
-    }
-
-    pure string getContent()
     {
         return content;
     }
@@ -34,65 +24,60 @@ struct Subject
 
 class Mms : Message
 {
-    private
+    immutable {
         ulong   date;
         Subject subject;
+    }
 
     public:
         pure this(Subject subject, Receiver[] receivers, Content content, ulong date = ulong.init)
         {
-            this.subject   = subject;
-            this.receivers = receivers;
-            this.content   = content;
-            this.date      = date;
+            this.subject     = subject;
+            messageReceivers = receivers;
+            messageContent   = content;
+            this.date        = date;
         }
 
         pure this(Subject subject, Receiver receiver, Content content, ulong date = ulong.init)
         {
             this(subject, [receiver], content, date);
         }
-
-        pure Subject getSubject()
-        {
-            return subject;
-        }
-
-        pure ulong getDate()
-        {
-            return date;
-        }
 }
 
 class Send : Method
 {
-    static const PATH path = PATH.MMS;
+    private:
+        static const Path path = Path.mms;
 
-    private Mms mms;
+        Mms mms;
 
-    this(Mms mms)
-    {
-        this.mms = mms;
-    }
-
-    RequestBuilder getRequestBuilder()
-    {
-        string[] receivers;
-
-        RequestBuilder requestBuilder = new RequestBuilder().setPath(path);
-
-        foreach (Receiver receiver; mms.getReceivers()) {
-            receivers ~= text(receiver);
+    public:
+        pure this(Mms mms)
+        {
+            this.mms = mms;
         }
 
-        requestBuilder
-            .setParameter(new Parameter(PARAMETER.TO, receivers))
-            .setParameter(new Parameter(PARAMETER.SUBJECT, text(mms.getSubject())))
-            .setParameter(new Parameter(PARAMETER.SMIL, text(mms.getContent())));
+        RequestBuilder createRequestBuilder()
+        {
+            string[] receivers;
 
-        if (mms.getDate() != ulong.init) {
-            requestBuilder.setParameter(new Parameter(PARAMETER.DATE, text(mms.getDate())));
+            RequestBuilder requestBuilder = new RequestBuilder;
+
+            requestBuilder.path = path;
+
+            foreach (Receiver receiver; mms.receivers) {
+                receivers ~= text(receiver);
+            }
+
+            requestBuilder
+                .setParameter(new Parameter(ParamName.to, receivers))
+                .setParameter(new Parameter(ParamName.subject, text(mms.subject)))
+                .setParameter(new Parameter(ParamName.smil, text(mms.content)));
+
+            if (mms.date != ulong.init) {
+                requestBuilder.setParameter(new Parameter(ParamName.date, text(mms.date)));
+            }
+
+            return requestBuilder;
         }
-
-        return requestBuilder;
-    }
 }

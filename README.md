@@ -385,10 +385,8 @@ void main()
  * consider use unions
  * use `RedBlackTree` for `parameters` in `RequestBuilder`
  * redesign `mms.d` like `sms.d`
- * rethink `class` and `struct` usage
  * add timers to debug mode (http://wiki.dlang.org/Timing_Code)
  * rethink current visibility (http://dlang.org/attribute.html#ProtectionAttribute)
- * add custom exception classes
  * create ReceiverSet that can not be empty
  * add support for HLR responses
  * phone number validator

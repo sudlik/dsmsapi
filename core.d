@@ -1,72 +1,119 @@
 module dsmsapi.core;
 
-debug import std.string : strip;
-debug import std.stdio  : writeln;
+debug {
+    import std.stdio  : writeln;
+    import std.string : strip;
+}
+
+debug (WITHOUT_SEND) {
+    import std.stdio  : writeln;
+    import std.string : strip;
+}
 
 import std.array        : empty;
 import std.conv         : to;
 import std.socketstream : SocketStream;
 import std.uri          : encode;
 
-import std.socket : InternetAddress, TcpSocket;
+import std.socket: InternetAddress, TcpSocket;
 
-struct Receiver
+enum Host : string
 {
-    private uint phone;
+    plain1 = "api.smsapi.pl",
+    plain2 = "api2.smsapi.pl",
+}
 
-    pure this(uint phone)
-    {
-        this.phone = phone;
-    }
+enum Path : string
+{
+    hlr = "hlr.do",
+    mms = "mms.do",
+    sms = "sms.do",
+    vms = "vms.do",
+}
+
+enum ParamName : string
+{
+    date      = "date",
+    encoding  = "encoding",
+    format    = "format",
+    from      = "from",
+    idx       = "idx",
+    message   = "message",
+    normalize = "normalize",
+    number    = "number",
+    param1    = "param1",
+    param2    = "param2",
+    param3    = "param3",
+    param4    = "param4",
+    password  = "password",
+    single    = "single",
+    smil      = "smil",
+    subject   = "subject",
+    tmpl      = "template",
+    test      = "test",
+    tts       = "tts",
+    to        = "to",
+    username  = "username",
+}
+
+immutable struct Receiver
+{
+    uint phone;
 
     pure string toString()
     {
         return to!string(phone);
     }
+}
 
-    pure uint getPhone()
+immutable struct Variable
+{
+    ParamName name;
+    string    value;
+
+    pure this(ParamName paramName, string val)
     {
-        return phone;
+        name  = paramName;
+        value = val;
     }
 }
 
-struct Variable
+class Content
 {
-    PARAMETER name;
-    string    value;
+    private VariableCollection variableCollection;
 
-    pure this(PARAMETER name, string value)
+    @property pure VariableCollection variables()
     {
-        if (
-            name == PARAMETER.PARAM_1
-            || name == PARAMETER.PARAM_2
-            || name == PARAMETER.PARAM_3
-            || name == PARAMETER.PARAM_4
-        ) {
-            this.name  = name;
-        } else {
-            throw new Exception("Invalid name");
-        }
-
-        this.value = value;
+        return variableCollection;
     }
 
-    pure string getName()
+    immutable string value;
+
+    pure this(string content, VariableCollection variables = new VariableCollection)
     {
-        return name;
+        value = content;
+        variableCollection = variables;
     }
 
-    pure string getValue()
+    pure override string toString()
     {
         return value;
     }
 }
 
-struct VariableCollection
+class VariableAlreadyAddedException : Exception
+{
+    pure this(string name)
+    {
+        super("Variable already added: " ~ name);
+    }
+}
+
+class VariableCollection
 {
     private Variable[] variables;
 
-    pure Variable[] all()
+    @property pure Variable[] all()
     {
         return variables;
     }
@@ -83,8 +130,8 @@ struct VariableCollection
     VariableCollection add(Variable variable)
     {
         foreach (Variable var; variables) {
-            if (variable.getName() == var.getName()) {
-                throw new Exception("Variable already added");
+            if (variable.name == var.name) {
+                throw new VariableAlreadyAddedException(variable.name);
             }
         }
 
@@ -94,256 +141,134 @@ struct VariableCollection
     }
 }
 
-class Content
+interface Method
 {
-    private {
-        string             value;
-        VariableCollection variableCollection;
-    }
+    private static const Path path;
 
-    pure this(string value, VariableCollection variableCollection = VariableCollection())
-    {
-        this.value = value;
-        this.variableCollection = variableCollection;
-    }
-
-    override pure string toString()
-    {
-        return value;
-    }
-
-    pure string getValue()
-    {
-        return value;
-    }
-
-    pure VariableCollection getVariableCollection()
-    {
-        return variableCollection;
-    }
+    RequestBuilder createRequestBuilder();
 }
 
 abstract class Message
 {
-    protected:
-        Receiver[]  receivers;
-        Content     content;
+    Receiver[]  messageReceivers;
+    Content     messageContent;
 
-    public:
-        pure Receiver[] getReceivers()
-        {
-            return receivers;
-        }
+    @property pure Receiver[] receivers()
+    {
+        return messageReceivers;
+    }
 
-        pure Content getContent()
-        {
-            return content;
-        }
-}
-
-interface Method
-{
-    RequestBuilder getRequestBuilder();
-}
-
-enum HOST : string
-{
-    PLAIN_1 = "api.smsapi.pl",
-    PLAIN_2 = "api2.smsapi.pl",
-}
-
-enum PATH : string
-{
-    HLR = "hlr.do",
-    MMS = "mms.do",
-    SMS = "sms.do",
-    VMS = "vms.do",
-}
-
-enum AGENT : string
-{
-    DSMSAPI = "dsmsapi",
-}
-
-enum PROTOCOL : string
-{
-    HTTP_11 = "HTTP/1.1",
-}
-
-enum METHOD : string
-{
-    POST = "POST",
-}
-
-enum PORT : ushort
-{
-    P80 = 80,
-}
-
-enum PARAMETER : string
-{
-    DATE      = "date",
-    ENCODING  = "encoding",
-    FORMAT    = "format",
-    FROM      = "from",
-    IDX       = "idx",
-    MESSAGE   = "message",
-    NORMALIZE = "normalize",
-    NUMBER    = "number",
-    PARAM_1   = "param1",
-    PARAM_2   = "param2",
-    PARAM_3   = "param3",
-    PARAM_4   = "param4",
-    PASSWORD  = "password",
-    SINGLE    = "single",
-    SMIL      = "smil",
-    SUBJECT   = "subject",
-    TEMPLATE  = "template",
-    TEST      = "test",
-    TTS       = "tts",
-    TO        = "to",
-    USERNAME  = "username",
+    @property pure Content content()
+    {
+        return messageContent;
+    }
 }
 
 class Parameter
 {
-    private:
-        string name;
-        string value;
+    immutable {
+        string   name;
+        string   value;
         string[] values;
+    }
 
-    public:
-        this(string name, string value)
-        {
-            this.name = name;
+    this(string name, string value)
+    {
+        this.name = name;
+        this.value = encode(value);
+        this.values = [];
+    }
 
-            setValue(value);
+    this(string name, string[] values)
+    {
+        string[] vals;
+
+        this.name = name;
+        this.value = string.init;
+
+        foreach (string value; values) {
+            vals ~= encode(value);
         }
 
-        this(string name, string[] values)
-        {
-            this.name = name;
-
-            setValues(values);
-        }
-
-        pure string getName()
-        {
-            return name;
-        }
-
-        pure string getValue()
-        {
-            return value;
-        }
-
-        pure string[] getValues()
-        {
-            return values;
-        }
-
-    private:
-        Parameter setValue(string value)
-        {
-            this.value = encode(value);
-
-            return this;
-        }
-
-        Parameter setValues(string[] values)
-        {
-            foreach (string value; values) {
-                this.values ~= encode(value);
-            }
-
-            return this;
-        }
+        this.values = to!(immutable string[])(vals);
+    }
 }
 
 class RequestBuilder
 {
     private:
-        AGENT             agent;
-        HOST              host;
-        METHOD            method;
+        string            userAgent;
+        Host              serverHost;
+        string            requestMethod;
         Parameter[string] parameters;
-        PATH              path;
-        PORT              port;
-        PROTOCOL          protocol;
+        Path              requestPath;
+        ushort            serverPort;
+        string            requestProtocol;
 
     public:
-        pure RequestBuilder setAgent(AGENT agent)
+        @property pure string agent(string agent)
         {
-            this.agent = agent;
-
-            return this;
+            return userAgent = agent;
         }
 
-        pure RequestBuilder setMethod(METHOD method)
+        @property pure string method(string method)
         {
-            this.method = method;
-
-            return this;
+            return requestMethod = method;
         }
 
-        pure RequestBuilder setProtocol(PROTOCOL protocol)
+        @property pure string protocol(string protocol)
         {
-            this.protocol = protocol;
-
-            return this;
+            return requestProtocol = protocol;
         }
 
-        pure RequestBuilder setHost(HOST host)
+        @property pure Host host(Host host)
         {
-            this.host = host;
-
-            return this;
+            return serverHost = host;
         }
 
-        pure RequestBuilder setPort(PORT port)
+        @property pure ushort port(ushort port)
         {
-            this.port = port;
-
-            return this;
+            return serverPort = port;
         }
 
-        pure RequestBuilder setPath(PATH path)
+        @property pure Path path(Path path)
         {
-            this.path = path;
-
-            return this;
+            return requestPath = path;
         }
 
         pure RequestBuilder setParameter(Parameter parameter)
         {
-            parameters[parameter.getName()] = parameter;
+            parameters[parameter.name] = parameter;
 
             return this;
         }
 
-        Request getRequest()
+        Request create()
         {
             bool first = true;
-            string headers = method ~ " /" ~ path;
+            string headers = requestMethod ~ " /" ~ requestPath;
 
             foreach (string name, Parameter parameter; parameters) {
-                if (!empty(parameter.getValues())) {
-                    foreach (string value; parameter.getValues()) {
+                if (!empty(parameter.values)) {
+                    foreach (string value; parameter.values) {
                         headers ~= (first ? "?" : "&") ~ name ~ "[]=" ~ value;
 
                         first = false;
                     }
                 } else {
-                    headers ~= (first ? "?" : "&") ~ name ~ "=" ~ parameter.getValue();
+                    headers ~= (first ? "?" : "&") ~ name ~ "=" ~ parameter.value;
                 }
 
                 first = false;
             }
 
             return new Request(
-                host,
-                port,
-                headers ~ " " ~ protocol ~ "\r\nHost: "  ~ host ~ "\r\nUser-Agent: " ~ agent ~ "\r\n\r\n"
+                serverHost,
+                serverPort,
+                headers ~ " "
+                    ~ requestProtocol
+                    ~ "\r\nHost: " ~ serverHost
+                    ~ "\r\nUser-Agent: " ~ userAgent ~ "\r\n\r\n"
             );
         }
 }
@@ -355,12 +280,17 @@ class Request
         SocketStream socketStream;
 
     public:
-        this(HOST host, ushort port, string headers)
+        this(Host host, ushort port, string headers)
         {
             this.socketStream = new SocketStreamFactory().create(host, port);
             this.headers = headers;
 
             debug {
+                writeln("[DEBUG] REQUEST HEADERS:");
+                writeln(strip(headers));
+            }
+
+            debug (WITHOUT_SEND) {
                 writeln("[DEBUG] REQUEST HEADERS:");
                 writeln(strip(headers));
             }

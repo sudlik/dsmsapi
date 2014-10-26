@@ -1,69 +1,66 @@
 module dsmsapi.vms;
 
-import std.conv : text;
+import std.conv: text, to;
 
-import dsmsapi.core :
+import dsmsapi.core:
     Content,
     Message,
     Method,
     Parameter,
-    PARAMETER,
-    PATH,
+    ParamName,
+    Path,
     Receiver,
     RequestBuilder;
 
-class Vms : Message
+immutable class Vms : Message
 {
-    private ulong date;
+    ulong date;
 
-    public:
-        pure this(Receiver receiver, Content content, ulong date = ulong.init)
-        {
-            this([receiver], content, date);
-        }
+    pure this(Receiver receiver, Content content, ulong date = ulong.init)
+    {
+        this([receiver], content, date);
+    }
 
-        pure this(Receiver[] receivers, Content content, ulong date = ulong.init)
-        {
-            this.receivers = receivers;
-            this.content   = content;
-            this.date      = date;
-        }
-
-        pure ulong getDate()
-        {
-            return date;
-        }
+    pure this(Receiver[] receivers, Content content, ulong date = ulong.init)
+    {
+        messageReceivers = receivers;
+        messageContent   = content;
+        this.date        = date;
+    }
 }
 
 class Send : Method
 {
-    static const PATH path = PATH.VMS;
+    private:
+        static const Path path = Path.vms;
+        Vms vms;
 
-    private Vms vms;
-
-    this(Vms vms)
-    {
-        this.vms = vms;
-    }
-
-    RequestBuilder getRequestBuilder()
-    {
-        string[] receivers;
-
-        RequestBuilder requestBuilder = new RequestBuilder().setPath(path);
-
-        foreach (Receiver receiver; vms.getReceivers()) {
-            receivers ~= text(receiver);
+    public:
+        pure this(Vms vms)
+        {
+            this.vms = vms;
         }
 
-        requestBuilder
-            .setParameter(new Parameter(PARAMETER.TO, receivers))
-            .setParameter(new Parameter(PARAMETER.TTS, text(vms.getContent())));
+        RequestBuilder createRequestBuilder()
+        {
+            string[] receivers;
 
-        if (vms.getDate() != ulong.init) {
-            requestBuilder.setParameter(new Parameter(PARAMETER.DATE, text(vms.getDate())));
+            RequestBuilder requestBuilder = new RequestBuilder;
+
+            requestBuilder.path = path;
+
+            foreach (Receiver receiver; vms.receivers) {
+                receivers ~= text(receiver);
+            }
+
+            requestBuilder
+                .setParameter(new Parameter(ParamName.to, receivers))
+                .setParameter(new Parameter(ParamName.tts, text(vms.content)));
+
+            if (vms.date != ulong.init) {
+                requestBuilder.setParameter(new Parameter(ParamName.date, text(vms.date)));
+            }
+
+            return requestBuilder;
         }
-
-        return requestBuilder;
-    }
 }
