@@ -17,11 +17,11 @@ import dsmsapi.sms  : Builder, Eco, Send;
 
 void main()
 {
-    new Api(User("username", "password"))
+    new Api(new User("username", "password"))
         .execute(
             new Send(
-                Builder(new Content("Hello world!"), Receiver(555012345))
-                    .getEco()
+                new Builder(new Content("Hello world!"), Receiver(555012345))
+                    .createEco()
             )
         );
 }
@@ -30,10 +30,10 @@ void main()
 ``` D
 #!/usr/bin/env rdmd
 
-import std.stdio : writefln;
+import std.stdio: writeln;
 
-import dsmsapi.core : Content, HOST, Receiver;
 import dsmsapi.api  : Api, Item, Response, User;
+import dsmsapi.core : Content, Receiver;
 import dsmsapi.sms  : Config, Eco, Send;
 
 void main()
@@ -49,34 +49,19 @@ void main()
 
     string username = "username";
     string password = "password";
-    User   user     = User(username, password);
+    User   user     = new User(username, password);
     Api    api      = new Api(user);
 
     Response response = api.execute(send);
 
-    if (response.isSuccess()) {
-        writefln(`Success! Count: %d`, response.getCount());
-
-        foreach (int i, Item item; response.getList()) {
-            writefln(
-                `%d. Id: %d, points: %f, number: %d, status: %s.`,
-                i + 1,
-                item.id,
-                item.points,
-                item.number,
-                item.status
-            );
-        }
-    } else {
-        writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
-    }
+    writeln(response);
 }
 ```
-### SMS builder
+### SMS Builder
 ``` D
 #!/usr/bin/env rdmd
 
-import std.stdio : writefln;
+import std.stdio : writeln;
 
 import dsmsapi.core : Content, Receiver;
 import dsmsapi.api  : Api, Item, Response, User;
@@ -88,40 +73,25 @@ void main()
     Receiver receiver = Receiver(phone);
     string   text     = "Hello [%1%]!";
     Content  content  = new Content(text);
-    Builder  builder  = Builder(content, receiver);
-    Eco      sms      = builder.getEco();
+    Builder  builder  = new Builder(content, receiver);
+    Eco      sms      = builder.createEco();
     Send     sendSms  = new Send(sms);
 
     string username = "username";
     string password = "password";
-    User   user     = User(username, password);
+    User   user     = new User(username, password);
     Api    api      = new Api(user);
 
     Response response = api.execute(sendSms);
 
-    if (response.isSuccess()) {
-        writefln(`Success! Count: %d`, response.getCount());
-
-        foreach (int i, Item item; response.getList()) {
-            writefln(
-                `%d. Id: %d, points: %f, number: %d, status: %s.`,
-                i + 1,
-                item.id,
-                item.points,
-                item.number,
-                item.status
-            );
-        }
-    } else {
-        writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
-    }
+    writeln(response);
 }
 ```
 ### SMS Pattern
 ``` D
 #!/usr/bin/env rdmd
 
-import std.stdio : writefln;
+import std.stdio : writeln;
 
 import dsmsapi.core : Receiver;
 import dsmsapi.api  : Api, Item, Response, User;
@@ -139,27 +109,12 @@ void main()
 
     string username = "username";
     string password = "password";
-    User   user     = User(username, password);
+    User   user     = new User(username, password);
     Api    api      = new Api(user);
 
     Response response = api.execute(sendSms);
 
-    if (response.isSuccess()) {
-        writefln(`Success! Count: %d`, response.getCount());
-
-        foreach (int i, Item item; response.getList()) {
-            writefln(
-                `%d. Id: %d, points: %f, number: %d, status: %s.`,
-                i + 1,
-                item.id,
-                item.points,
-                item.number,
-                item.status
-            );
-        }
-    } else {
-        writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
-    }
+    writeln(response);
 }
 ```
 ### MMS
@@ -167,10 +122,10 @@ void main()
 #!/usr/bin/env rdmd
 
 import std.file  : readText;
-import std.stdio : writefln;
+import std.stdio : writeln;
 
-import dsmsapi.core : Content, HOST, Receiver;
 import dsmsapi.api  : Api, Item, Response, User;
+import dsmsapi.core : Content, Receiver;
 import dsmsapi.mms  : Send, Mms, Subject;
 
 void main()
@@ -188,39 +143,22 @@ void main()
 
     string username = "username";
     string password = "password";
-    User   user     = User(username, password);
+    User   user     = new User(username, password);
     Api    api      = new Api(user);
 
     Response response = api.execute(send);
 
-    if (response.isSuccess()) {
-        writefln(`Success! Count: %d`, response.getCount());
-
-        foreach (int i, Item item; response.getList()) {
-            writefln(
-                `%d. Id: %d, points: %f, number: %d, status: %s.`,
-                i + 1,
-                item.id,
-                item.points,
-                item.number,
-                item.status
-            );
-        }
-    } else {
-        writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
-    }
+    writeln(response);
 }
 ```
 ### VMS
 ``` D
 #!/usr/bin/env rdmd
 
-import std.conv     : to;
-import std.datetime : DateTime, SysTime;
-import std.stdio : writefln;
+import std.stdio: writeln;
 
 import dsmsapi.api  : Api, Item, Response, User;
-import dsmsapi.core : Content, HOST, Receiver;
+import dsmsapi.core : Content, Host, Receiver;
 import dsmsapi.vms  : Send, Vms;
 
 void main()
@@ -228,42 +166,25 @@ void main()
     int        phone     = 555012345;
     Receiver   receiver  = Receiver(phone);
     Receiver[] receivers = [receiver];
-    string     text      = "Hello world!";
-    Content    content   = new Content(text);
-    ulong      date      = to!ulong(SysTime(DateTime(2014, 9, 25, 12, 0, 0)).toUnixTime());
-    Vms        vms       = new Vms(receivers, content, date);
+    Content    content   = new Content("Hello world");
+    Vms        vms       = new Vms(receivers, content);
     Send       send      = new Send(vms);
 
     string username = "username";
     string password = "password";
-    User   user     = User(username, password);
+    User   user     = new User(username, password);
     Api    api      = new Api(user);
 
     Response response = api.execute(send);
 
-    if (response.isSuccess()) {
-        writefln(`Success! Count: %d`, response.getCount());
-
-        foreach (int i, Item item; response.getList()) {
-            writefln(
-                `%d. Id: %d, points: %f, number: %d, status: %s.`,
-                i + 1,
-                item.id,
-                item.points,
-                item.number,
-                item.status
-            );
-        }
-    } else {
-        writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
-    }
+    writeln(response);
 }
 ```
 ### HLR
 ``` D
 #!/usr/bin/env rdmd
 
-import std.stdio : writefln;
+import std.stdio : writeln;
 
 import dsmsapi.core : Content, Receiver;
 import dsmsapi.api  : Api, Item, Response, User;
@@ -275,32 +196,17 @@ void main()
     int[]    phones = [phone];
     string   idx    = "test1";
     string[] idxes  = [idx];
-    Hlr      hlr    = Hlr(phones, idxes);
+    Hlr      hlr    = new Hlr(phones, idxes);
     Check    check  = new Check(hlr);
 
     string username = "username";
     string password = "password";
-    User   user     = User(username, password);
+    User   user     = new User(username, password);
     Api    api      = new Api(user);
 
     Response response = api.execute(check);
 
-    if (response.isSuccess()) {
-        writefln(`Success! Count: %d`, response.getCount());
-
-        foreach (int i, Item item; response.getList()) {
-            writefln(
-                `%d. Id: %d, points: %f, number: %d, status: %s.`,
-                i + 1,
-                item.id,
-                item.points,
-                item.number,
-                item.status
-            );
-        }
-    } else {
-        writefln(`Failure! Error code: %d, message: %s.`, response.getError(), response.getMessage());
-    }
+    writeln(response);
 }
 ```
 ## Features
@@ -383,14 +289,13 @@ void main()
  * versions tags
  * consider use contracts
  * move `RequestBuilder` to separate repository
- * rethink Methods
+ * rethink `Method`s
  * consider use interfaces
  * consider use unions
  * use `RedBlackTree` for `parameters` in `RequestBuilder`
  * redesign `mms.d` like `sms.d`
  * add timers to debug mode (http://wiki.dlang.org/Timing_Code)
  * rethink current visibility (http://dlang.org/attribute.html#ProtectionAttribute)
- * create ReceiverSet that can not be empty
- * add support for HLR responses
+ * create `ReceiverSet` that can not be empty
  * phone number validator
- * use std.datetime to represent and manipulate dates
+ * use `std.datetime` to represent and manipulate dates
