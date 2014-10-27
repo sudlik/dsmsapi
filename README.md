@@ -289,7 +289,7 @@ void main()
  * versions tags
  * consider use contracts
  * move `RequestBuilder` to separate repository
- * rethink `Method`s
+ * rethink `Method`
  * consider use interfaces
  * consider use unions
  * use `RedBlackTree` for `parameters` in `RequestBuilder`
@@ -298,4 +298,5 @@ void main()
  * rethink current visibility (http://dlang.org/attribute.html#ProtectionAttribute)
  * create `ReceiverSet` that can not be empty
  * phone number validator
- * use `std.datetime` to represent and manipulate dates
+ * safe functions (http://dlang.org/function.html#safe-functions)
+ * trusted functions (http://dlang.org/function.html#trusted-functions)

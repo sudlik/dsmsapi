@@ -56,9 +56,9 @@ enum ParamName : string
     username  = "username",
 }
 
-immutable struct Receiver
+struct Receiver
 {
-    uint phone;
+    immutable uint phone;
 
     pure string toString()
     {
@@ -283,7 +283,7 @@ class Request
         this(Host host, ushort port, string headers)
         {
             this.socketStream = new SocketStreamFactory().create(host, port);
-            this.headers = headers;
+            this.headers      = headers;
 
             debug {
                 writeln("[DEBUG] REQUEST HEADERS:");

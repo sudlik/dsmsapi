@@ -1,6 +1,7 @@
 module dsmsapi.mms;
 
-import std.conv: text;
+import std.conv     : text;
+import std.datetime : DateTime, SysTime;
 
 import dsmsapi.core:
     Content,
@@ -25,23 +26,36 @@ immutable struct Subject
 class Mms : Message
 {
     immutable {
-        ulong   date;
-        Subject subject;
+        DateTime date;
+        Subject  subject;
     }
 
-    public:
-        pure this(Subject subject, Receiver[] receivers, Content content, ulong date = ulong.init)
-        {
-            this.subject     = subject;
-            messageReceivers = receivers;
-            messageContent   = content;
-            this.date        = date;
-        }
+    pure this(Subject subject, Receiver receiver, Content content, ulong timestamp = ulong.init)
+    {
+        this(subject, [receiver], content, timestamp);
+    }
 
-        pure this(Subject subject, Receiver receiver, Content content, ulong date = ulong.init)
-        {
-            this(subject, [receiver], content, date);
-        }
+    pure this(Subject subject, Receiver[] receivers, Content content, ulong timestamp = ulong.init)
+    {
+        DateTime dateTime = DateTime(1970, 1, 1);
+
+        dateTime.roll!"seconds"(timestamp);
+
+        this(subject, receivers, content, dateTime);
+    }
+
+    pure this(Subject subject, Receiver receiver, Content content, DateTime dateTime)
+    {
+        this(subject, [receiver], content, dateTime);
+    }
+
+    pure this(Subject subject, Receiver[] receivers, Content content, DateTime dateTime)
+    {
+        this.subject     = subject;
+        messageReceivers = receivers;
+        messageContent   = content;
+        date             = dateTime;
+    }
 }
 
 class Send : Method
@@ -59,9 +73,10 @@ class Send : Method
 
         RequestBuilder createRequestBuilder()
         {
-            string[] receivers;
-
             RequestBuilder requestBuilder = new RequestBuilder;
+            ulong          timestamp      = SysTime(mms.date).toUnixTime();
+
+            string[] receivers;
 
             requestBuilder.path = path;
 
@@ -74,8 +89,8 @@ class Send : Method
                 .setParameter(new Parameter(ParamName.subject, text(mms.subject)))
                 .setParameter(new Parameter(ParamName.smil, text(mms.content)));
 
-            if (mms.date != ulong.init) {
-                requestBuilder.setParameter(new Parameter(ParamName.date, text(mms.date)));
+            if (timestamp > SysTime().toUnixTime()) {
+                requestBuilder.setParameter(new Parameter(ParamName.date, text(timestamp)));
             }
 
             return requestBuilder;

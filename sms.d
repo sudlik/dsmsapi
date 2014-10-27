@@ -1,7 +1,8 @@
 module dsmsapi.sms;
 
-import std.array : empty;
-import std.conv  : text;
+import std.array    : empty;
+import std.conv     : text;
+import std.datetime : DateTime, SysTime;
 
 import dsmsapi.core :
     Content,
@@ -43,10 +44,10 @@ immutable struct Sender
 
 immutable struct Config
 {
-    Charset charset;
-    ulong   date;
-    bool    normalize;
-    bool    single;
+    Charset  charset;
+    DateTime date;
+    bool     normalize;
+    bool     single;
 }
 
 abstract class Sms : Message
@@ -129,7 +130,7 @@ class Builder
         Content    content;
         Receiver[] receivers;
         Sender     sender;
-        ulong      sendDate;
+        DateTime   sendDate;
 
     public:
         @property pure Charset charset(Charset charset)
@@ -147,9 +148,18 @@ class Builder
             return singleMessage = single;
         }
 
-        @property pure ulong date(ulong date)
+        @property pure DateTime date(ulong timestamp)
         {
-            return sendDate = date;
+            DateTime dateTime = DateTime(1970, 1, 1);
+
+            dateTime.roll!"seconds"(timestamp);
+
+            return sendDate = dateTime;
+        }
+
+        @property pure DateTime date(DateTime dateTime)
+        {
+            return sendDate = dateTime;
         }
 
         @property pure VariableCollection variables(VariableCollection variables)
@@ -239,10 +249,11 @@ class Send : Method
 
         RequestBuilder createRequestBuilder()
         {
+            RequestBuilder requestBuilder = new RequestBuilder;
+            ulong          timestamp      = SysTime(sms.config.date).toUnixTime();
+
             string[] receivers;
             string   from;
-
-            RequestBuilder requestBuilder = new RequestBuilder;
 
             requestBuilder.path = path;
 
@@ -263,8 +274,8 @@ class Send : Method
                 requestBuilder.setParameter(new Parameter(ParamName.encoding, sms.config.charset));
             }
 
-            if (sms.config.date != ulong.init) {
-                requestBuilder.setParameter(new Parameter(ParamName.date, text(sms.config.date)));
+            if (timestamp > SysTime().toUnixTime()) {
+                requestBuilder.setParameter(new Parameter(ParamName.date, text(timestamp)));
             }
 
             if (sms.config.normalize) {

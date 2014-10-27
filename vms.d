@@ -1,6 +1,7 @@
 module dsmsapi.vms;
 
-import std.conv: text, to;
+import std.conv     : text, to;
+import std.datetime : DateTime, SysTime;
 
 import dsmsapi.core:
     Content,
@@ -12,20 +13,34 @@ import dsmsapi.core:
     Receiver,
     RequestBuilder;
 
-immutable class Vms : Message
+class Vms : Message
 {
-    ulong date;
+    immutable DateTime date;
 
-    pure this(Receiver receiver, Content content, ulong date = ulong.init)
+    pure this(Receiver receiver, Content content, ulong timestamp = ulong.init)
     {
-        this([receiver], content, date);
+        this([receiver], content, timestamp);
     }
 
-    pure this(Receiver[] receivers, Content content, ulong date = ulong.init)
+    pure this(Receiver[] receivers, Content content, ulong timestamp = ulong.init)
+    {
+        DateTime dateTime = DateTime(1970, 1, 1);
+
+        dateTime.roll!"seconds"(timestamp);
+
+        this(receivers, content, dateTime);
+    }
+
+    pure this(Receiver receiver, Content content, DateTime dateTime)
+    {
+        this([receiver], content, dateTime);
+    }
+
+    pure this(Receiver[] receivers, Content content, DateTime dateTime)
     {
         messageReceivers = receivers;
         messageContent   = content;
-        this.date        = date;
+        date             = dateTime;
     }
 }
 
@@ -33,6 +48,7 @@ class Send : Method
 {
     private:
         static const Path path = Path.vms;
+
         Vms vms;
 
     public:
@@ -43,9 +59,10 @@ class Send : Method
 
         RequestBuilder createRequestBuilder()
         {
-            string[] receivers;
-
             RequestBuilder requestBuilder = new RequestBuilder;
+            ulong          timestamp      = SysTime(vms.date).toUnixTime();
+
+            string[] receivers;
 
             requestBuilder.path = path;
 
@@ -57,8 +74,8 @@ class Send : Method
                 .setParameter(new Parameter(ParamName.to, receivers))
                 .setParameter(new Parameter(ParamName.tts, text(vms.content)));
 
-            if (vms.date != ulong.init) {
-                requestBuilder.setParameter(new Parameter(ParamName.date, text(vms.date)));
+            if (timestamp > SysTime().toUnixTime()) {
+                requestBuilder.setParameter(new Parameter(ParamName.date, text(timestamp)));
             }
 
             return requestBuilder;
