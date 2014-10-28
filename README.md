@@ -1,4 +1,4 @@
-# DSmsApi
+# dsmsapi
 ## About
 Client for SMSAPI REST API ([smsapi.pl/rest](http://smsapi.pl/rest)),
 written in D programming language ([dlang.org](http://dlang.org))
@@ -7,10 +7,10 @@ written in D programming language ([dlang.org](http://dlang.org))
 * cURL
 
 ## Installation
-`git clone git@github.com:sudlik/dsmsapi.git`
+`$ git clone git@github.com:sudlik/dsmsapi.git`
 ## Examples
 ### Compilation
-`rdmd -debug -L-lphobos2 -L-l:libcurl.so.4 script`
+`$ rdmd -debug -L-lphobos2 -L-l:libcurl.so.4 script`
 ### Shorter
 ``` D
 #!/usr/bin/env rdmd
@@ -214,7 +214,7 @@ void main()
     writeln(response);
 }
 ```
-## Features
+## Implemented components
 ### SMS
 - [x] charset (encoding)
 - [ ] check account points
@@ -270,20 +270,30 @@ void main()
 - [x] number
 
 ### Subusers
+...
 
 ### Sender fields
+...
 
 ### Phonebook
+...
 
-### Other
-- [ ] host auto-switch
-- [ ] idx generator and validator
-- [ ] multithreading
-- [ ] SMIL generator and validator
-- [ ] test request
-- [ ] logger
-- [ ] events
+## Additional features
+- [ ] content validator
+- [ ] date validator
 - [x] debug mode
+- [ ] events
+- [ ] host auto-switch
+- [ ] idx generator
+- [ ] idx validator
+- [ ] logger
+- [ ] multithreading
+- [ ] phone validator
+- [ ] profile mode
+- [ ] SMIL generator
+- [ ] SMIL validator
+- [ ] subject validator
+- [ ] test request
 
 ## ToDo
  * add docs (http://dlang.org/ddoc.html)
@@ -301,6 +311,5 @@ void main()
  * add timers to debug mode (http://wiki.dlang.org/Timing_Code)
  * rethink current visibility (http://dlang.org/attribute.html#ProtectionAttribute)
  * create `ReceiverSet` that can not be empty
- * phone number validator
  * safe functions (http://dlang.org/function.html#safe-functions)
  * trusted functions (http://dlang.org/function.html#trusted-functions)
