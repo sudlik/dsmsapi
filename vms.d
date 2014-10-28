@@ -11,9 +11,9 @@ import dsmsapi.core:
     Method,
     Parameter,
     ParamName,
-    Path,
     Receiver,
-    RequestBuilder;
+    RequestBuilder,
+    Resource;
 
 class Vms : Message
 {
@@ -81,7 +81,7 @@ class Vms : Message
 class Send : Method
 {
     private:
-        static const Path path = Path.vms;
+        static const Resource resource = Resource.vms;
 
         Vms vms;
 
@@ -98,7 +98,7 @@ class Send : Method
 
             string[] receivers;
 
-            requestBuilder.path = path;
+            requestBuilder.resource = resource;
 
             foreach (Receiver receiver; vms.receivers) {
                 receivers ~= text(receiver);

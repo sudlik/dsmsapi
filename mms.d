@@ -11,9 +11,9 @@ import dsmsapi.core:
     Method,
     Parameter,
     ParamName,
-    Path,
     Receiver,
-    RequestBuilder;
+    RequestBuilder,
+    Resource;
 
 immutable struct Subject
 {
@@ -89,7 +89,7 @@ class Mms : Message
 class Send : Method
 {
     private:
-        static const Path path = Path.mms;
+        static const Resource resource = Resource.mms;
 
         Mms mms;
 
@@ -106,7 +106,7 @@ class Send : Method
 
             string[] receivers;
 
-            requestBuilder.path = path;
+            requestBuilder.resource = resource;
 
             foreach (Receiver receiver; mms.receivers) {
                 receivers ~= text(receiver);

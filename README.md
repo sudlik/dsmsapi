@@ -3,17 +3,20 @@
 Client for SMSAPI REST API ([smsapi.pl/rest](http://smsapi.pl/rest)),
 written in D programming language ([dlang.org](http://dlang.org))
 ## Requirements
-dmd 2.065
+* DMD 2.066
+* cURL
 ## Installation
 `git clone git@github.com:sudlik/dsmsapi.git`
 ## Examples
-### Short
+### Compilation
+`rdmd -debug -L-lphobos2 -L-l:libcurl.so.4 script`
+### Shorter
 ``` D
 #!/usr/bin/env rdmd
 
-import dsmsapi.core : Content, Receiver;
-import dsmsapi.api  : Api, User;
-import dsmsapi.sms  : Builder, Eco, Send;
+import dsmsapi.api;
+import dsmsapi.core;
+import dsmsapi.sms;
 
 void main()
 {
@@ -91,28 +94,29 @@ void main()
 ``` D
 #!/usr/bin/env rdmd
 
-import std.stdio : writeln;
+import std.stdio: writeln;
 
-import dsmsapi.core : Receiver;
 import dsmsapi.api  : Api, Item, Response, User;
-import dsmsapi.sms  : Config, Eco, Pattern, Send;
+import dsmsapi.core : Content, Receiver;
+import dsmsapi.sms  : Config, Eco, Send;
 
 void main()
 {
     int        phone     = 555012345;
-    Receiver[] receivers = [Receiver(phone)];
-    string     name      = "Hello world";
-    Pattern    pattern   = new Pattern(name);
+    Receiver   receiver  = Receiver(phone);
+    Receiver[] receivers = [receiver];
+    string     text      = "Hello world!";
+    Content    content   = new Content(text);
     Config     config    = Config();
-    Eco        sms       = new Eco(receivers, pattern, config);
-    Send       sendSms   = new Send(sms);
+    Eco        sms       = new Eco(receivers, content, config);
+    Send       send      = new Send(sms);
 
     string username = "username";
     string password = "password";
     User   user     = new User(username, password);
     Api    api      = new Api(user);
 
-    Response response = api.execute(sendSms);
+    Response response = api.execute(send);
 
     writeln(response);
 }
@@ -158,7 +162,7 @@ void main()
 import std.stdio: writeln;
 
 import dsmsapi.api  : Api, Item, Response, User;
-import dsmsapi.core : Content, Host, Receiver;
+import dsmsapi.core : Content, Receiver;
 import dsmsapi.vms  : Send, Vms;
 
 void main()
@@ -186,8 +190,8 @@ void main()
 
 import std.stdio : writeln;
 
-import dsmsapi.core : Content, Receiver;
 import dsmsapi.api  : Api, Item, Response, User;
+import dsmsapi.core : Content, Receiver;
 import dsmsapi.hlr  : Check, Hlr;
 
 void main()
@@ -212,57 +216,57 @@ void main()
 ## Features
 ### SMS
 - [x] charset (encoding)
+- [ ] check account points
+- [ ] check_idx
 - [x] content (message)
+- [ ] data_coding
+- [x] date
+- [ ] date_validate
+- [ ] details
+- [ ] discount_group
+- [ ] expiration_date
+- [ ] fast
+- [ ] flash
 - [ ] group
+- [ ] idx
+- [ ] max_parts
 - [x] normalize
+- [ ] notify_url
+- [ ] nounicode
 - [x] parameters
+- [ ] partner_id
 - [x] patterns (templates)
+- [ ] remove scheduled message (sch_del)
+- [ ] send vCard
 - [x] sender name
 - [x] sender types
 - [x] single
-- [ ] flash
-- [ ] details
-- [ ] date_validate
-- [ ] data_coding
 - [ ] skip_foreign
-- [ ] nounicode
-- [ ] fast
-- [ ] partner_id
-- [ ] max_parts
-- [ ] expiration_date
-- [ ] discount_group
-- [ ] remove scheduled message (sch_del)
-- [ ] send vCard
-- [ ] check account points
-- [ ] notify_url
-- [x] date
-- [ ] idx
-- [ ] check_idx
 - [ ] WAP PUSH (udh)
 
 ### MMS
+- [ ] check_idx
 - [x] content (SMIL)
-- [x] subject
-- [ ] notify_url
 - [x] date
 - [ ] idx
-- [ ] check_idx
+- [ ] notify_url
+- [x] subject
 
 ### VMS
-- [ ] tts
-- [ ] file
-- [ ] try
-- [ ] interval
-- [ ] skip_gsm
-- [ ] tts_lector
-- [ ] notify_url
-- [x] date
-- [ ] idx
 - [ ] check_idx
+- [x] date
+- [ ] file
+- [ ] idx
+- [ ] interval
+- [ ] notify_url
+- [ ] skip_gsm
+- [ ] try
+- [ ] tts
+- [ ] tts_lector
 
 ### HLR
-- [x] number
 - [x] idx
+- [x] number
 
 ### Subusers
 
@@ -271,15 +275,14 @@ void main()
 ### Phonebook
 
 ### Other
-- [ ] multithreading
-- [ ] SSL support
-- [ ] SMIL generator
-- [ ] SMIL validator
-- [x] manage hosts
-- [x] test request
 - [ ] host auto-switch
-- [ ] idx generator
-- [ ] idx validator
+- [ ] idx generator and validator
+- [ ] multithreading
+- [ ] SMIL generator and validator
+- [ ] test request
+- [ ] logger
+- [ ] events
+- [x] debug mode
 
 ## ToDo
  * add docs (http://dlang.org/ddoc.html)
@@ -300,5 +303,3 @@ void main()
  * phone number validator
  * safe functions (http://dlang.org/function.html#safe-functions)
  * trusted functions (http://dlang.org/function.html#trusted-functions)
- * logger
- * events

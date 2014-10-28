@@ -8,7 +8,7 @@ import std.regex         : matchFirst;
 import std.string        : format;
 import std.traits        : hasMember;
 
-import dsmsapi.core: Host, Method, Parameter, ParamName, RequestBuilder;
+import dsmsapi.core: Method, Parameter, ParamName, RequestBuilder, Server;
 
 immutable struct Item
 {
@@ -130,36 +130,27 @@ class Api
     private:
         static const {
             string
-                agent    = "dsmsapi",
                 format   = "json",
-                method   = "POST",
-                protocol = "HTTP/1.1",
                 pattern  = `[a-z0-9](\{.+\})`;
-
-            ushort port = 80;
         }
 
-        Host host;
+        Server server;
         bool test;
         User user;
 
     public:
-        pure this(User user, Host host = Host.init, bool test = false)
+        pure this(User user, Server server = Server.init, bool test = false)
         {
-            this.user = user;
-            this.host = host;
-            this.test = test;
+            this.user   = user;
+            this.server = server;
+            this.test   = test;
         }
 
         Response execute(Method apiMethod)
         {
             RequestBuilder requestBuilder = apiMethod.createRequestBuilder();
 
-            requestBuilder.host = host;
-            requestBuilder.method = method;
-            requestBuilder.protocol = protocol;
-            requestBuilder.agent = agent;
-            requestBuilder.port = port;
+            requestBuilder.server = server;
 
             requestBuilder
                 .setParameter(new Parameter(ParamName.username, user.name))

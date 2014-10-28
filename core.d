@@ -12,23 +12,24 @@ debug (WITHOUT_SEND) {
 
 import std.array        : empty;
 import std.conv         : to;
+import std.net.curl     : get;
 import std.socketstream : SocketStream;
 import std.uri          : encode;
 
 import std.socket: InternetAddress, TcpSocket;
 
-enum Host : string
+enum Server : string
 {
-    plain1 = "api.smsapi.pl",
-    plain2 = "api2.smsapi.pl",
+    def = "https://ssl.smsapi.pl/",
+    alternative = "https://ssl2.smsapi.pl/",
 }
 
-enum Path : string
+enum Resource : string
 {
-    hlr = "hlr.do",
-    mms = "mms.do",
-    sms = "sms.do",
-    vms = "vms.do",
+    hlr = "hlr.do?",
+    mms = "mms.do?",
+    sms = "sms.do?",
+    vms = "vms.do?",
 }
 
 enum ParamName : string
@@ -159,7 +160,7 @@ class VariableCollection
 
 interface Method
 {
-    private static const Path path;
+    private static const Resource resource;
 
     RequestBuilder createRequestBuilder();
 }
@@ -213,43 +214,19 @@ class Parameter
 class RequestBuilder
 {
     private:
-        string            userAgent;
-        Host              serverHost;
-        string            requestMethod;
+        Resource          methodResource;
         Parameter[string] parameters;
-        Path              requestPath;
-        ushort            serverPort;
-        string            requestProtocol;
+        Server            serverName;
 
     public:
-        @property pure string agent(string agent)
+        @property pure Resource resource(Resource resource)
         {
-            return userAgent = agent;
+            return methodResource = resource;
         }
 
-        @property pure string method(string method)
+        @property pure Server server(Server server)
         {
-            return requestMethod = method;
-        }
-
-        @property pure string protocol(string protocol)
-        {
-            return requestProtocol = protocol;
-        }
-
-        @property pure Host host(Host host)
-        {
-            return serverHost = host;
-        }
-
-        @property pure ushort port(ushort port)
-        {
-            return serverPort = port;
-        }
-
-        @property pure Path path(Path path)
-        {
-            return requestPath = path;
+            return serverName = server;
         }
 
         pure RequestBuilder setParameter(Parameter parameter)
@@ -262,85 +239,62 @@ class RequestBuilder
         Request create()
         {
             bool first = true;
-            string headers = requestMethod ~ " /" ~ requestPath;
+            string url = serverName ~ methodResource;
 
             foreach (string name, Parameter parameter; parameters) {
                 if (!empty(parameter.values)) {
                     foreach (string value; parameter.values) {
-                        headers ~= (first ? "?" : "&") ~ name ~ "[]=" ~ value;
+                        url ~= (first ? "" : "&") ~ name ~ "[]=" ~ value;
 
                         first = false;
                     }
                 } else {
-                    headers ~= (first ? "?" : "&") ~ name ~ "=" ~ parameter.value;
+                    url ~= (first ? "" : "&") ~ name ~ "=" ~ parameter.value;
                 }
 
                 first = false;
             }
 
-            return new Request(
-                serverHost,
-                serverPort,
-                headers ~ " "
-                    ~ requestProtocol
-                    ~ "\r\nHost: " ~ serverHost
-                    ~ "\r\nUser-Agent: " ~ userAgent ~ "\r\n\r\n"
-            );
+            return new Request(url);
         }
 }
 
 class Request
 {
-    private:
-        string headers;
-        SocketStream socketStream;
+    private string url;
 
-    public:
-        this(Host host, ushort port, string headers)
-        {
-            this.socketStream = new SocketStreamFactory().create(host, port);
-            this.headers      = headers;
+    this(string url)
+    {
+        this.url = url;
+
+        debug {
+            writeln("[DEBUG] REQUEST HEADERS:");
+            writeln(url);
+        }
+
+        debug (WITHOUT_SEND) {
+            writeln("[DEBUG] REQUEST HEADERS:");
+            writeln(url);
+        }
+    }
+
+    string send()
+    {
+        string content;
+
+        debug (WITHOUT_SEND) {
+            writeln("[DEBUG] WITHOUT SEND");
+
+            return `0{"error":0,"message":""}0`;
+        } else {
+            content = to!string(get(url));
 
             debug {
-                writeln("[DEBUG] REQUEST HEADERS:");
-                writeln(strip(headers));
+                writeln("[DEBUG] RESPONSE:");
+                writeln(content);
             }
 
-            debug (WITHOUT_SEND) {
-                writeln("[DEBUG] REQUEST HEADERS:");
-                writeln(strip(headers));
-            }
+            return content;
         }
-
-        string send()
-        {
-            string content;
-
-            debug (WITHOUT_SEND) {
-                writeln("[DEBUG] WITHOUT SEND");
-
-                return `0{"error":0,"message":""}0`;
-            } else {
-                socketStream.writeString(headers);
-
-                while (!socketStream.eof()) {
-                    content ~= socketStream.readLine();
-                }
-
-                debug {
-                    writeln("[DEBUG] RESPONSE:");
-                    writeln(content);
-                }
-
-                return content;
-            }
-        }
-}
-
-class SocketStreamFactory
-{
-    SocketStream create(string host, ushort port)
-    {
-        return new SocketStream(new TcpSocket(new InternetAddress(host, port)));
     }
 }

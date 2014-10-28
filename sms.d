@@ -12,9 +12,9 @@ import dsmsapi.core :
     Method,
     Parameter,
     ParamName,
-    Path,
     Receiver,
     RequestBuilder,
+    Resource,
     Variable,
     VariableCollection;
 
@@ -260,7 +260,7 @@ class Builder
 class Send : Method
 {
     private:
-        static const Path path = Path.sms;
+        static const Resource resource = Resource.sms;
 
         Sms sms;
 
@@ -278,7 +278,7 @@ class Send : Method
             string[] receivers;
             string   from;
 
-            requestBuilder.path = path;
+            requestBuilder.resource = resource;
 
             if (sms.sender.name) {
                 from = sms.sender.name;

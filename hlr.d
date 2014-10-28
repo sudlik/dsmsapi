@@ -4,7 +4,7 @@ import std.array : empty, join;
 import std.conv  : to;
 import std.regex : matchFirst;
 
-import dsmsapi.core : Method, Parameter, ParamName, Path, RequestBuilder;
+import dsmsapi.core : Method, Parameter, ParamName, RequestBuilder, Resource;
 
 const pattern = `[a-zA-Z0-9]{0,255}`;
 
@@ -41,7 +41,7 @@ class Check : Method
 {
     private:
         static const {
-            Path path = Path.hlr;
+            Resource resource = Resource.hlr;
             string
                 numberSeparator = ",",
                 idxSeparator = ",";
@@ -59,7 +59,7 @@ class Check : Method
         {
             RequestBuilder requestBuilder = new RequestBuilder;
 
-            requestBuilder.path = path;
+            requestBuilder.resource = resource;
 
             requestBuilder.setParameter(
                 new Parameter(ParamName.number, join(to!(string[])(hlr.numbers), numberSeparator))
