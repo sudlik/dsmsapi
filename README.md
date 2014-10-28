@@ -5,6 +5,7 @@ written in D programming language ([dlang.org](http://dlang.org))
 ## Requirements
 * DMD 2.066
 * cURL
+
 ## Installation
 `git clone git@github.com:sudlik/dsmsapi.git`
 ## Examples
