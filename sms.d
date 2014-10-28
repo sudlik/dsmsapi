@@ -2,10 +2,12 @@ module dsmsapi.sms;
 
 import std.array    : empty;
 import std.conv     : text;
-import std.datetime : DateTime, SysTime;
+import std.datetime : DateTime, DateTimeException, SysTime;
 
 import dsmsapi.core :
     Content,
+    InvalidDateStringException,
+    InvalidTimestampException,
     Message,
     Method,
     Parameter,
@@ -153,6 +155,27 @@ class Builder
             DateTime dateTime = DateTime(1970, 1, 1);
 
             dateTime.roll!"seconds"(timestamp);
+
+            return sendDate = dateTime;
+        }
+
+        @property pure DateTime date(string date)
+        {
+            DateTime dateTime;
+
+            try {
+                dateTime = DateTime.fromISOString(date);
+            } catch (DateTimeException exception) {
+                try {
+                    dateTime = DateTime.fromISOExtString(date);
+                } catch (DateTimeException exception) {
+                    try {
+                        dateTime = DateTime.fromSimpleString(date);
+                    } catch (DateTimeException exception) {
+                        throw new InvalidDateStringException(date);
+                    }
+                }
+            }
 
             return sendDate = dateTime;
         }

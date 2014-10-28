@@ -300,3 +300,5 @@ void main()
  * phone number validator
  * safe functions (http://dlang.org/function.html#safe-functions)
  * trusted functions (http://dlang.org/function.html#trusted-functions)
+ * logger
+ * events

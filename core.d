@@ -78,6 +78,30 @@ immutable struct Variable
     }
 }
 
+class InvalidDateStringException : Exception
+{
+    pure this(string dateTime)
+    {
+        super("Invalid date string: " ~ dateTime);
+    }
+}
+
+class InvalidTimestampException : Exception
+{
+    pure this(ulong timestamp)
+    {
+        super("Timestamp is invalid: " ~ to!string(timestamp) ~ ". Set future date or omit it.");
+    }
+}
+
+class VariableAlreadyAddedException : Exception
+{
+    pure this(string name)
+    {
+        super("Variable already added: " ~ name);
+    }
+}
+
 class Content
 {
     private VariableCollection variableCollection;
@@ -98,14 +122,6 @@ class Content
     pure override string toString()
     {
         return value;
-    }
-}
-
-class VariableAlreadyAddedException : Exception
-{
-    pure this(string name)
-    {
-        super("Variable already added: " ~ name);
     }
 }
 

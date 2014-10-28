@@ -1,10 +1,12 @@
 module dsmsapi.vms;
 
-import std.conv     : text, to;
-import std.datetime : DateTime, SysTime;
+import std.conv     : text;
+import std.datetime : DateTime, DateTimeException, SysTime;
 
 import dsmsapi.core:
     Content,
+    InvalidDateStringException,
+    InvalidTimestampException,
     Message,
     Method,
     Parameter,
@@ -26,7 +28,39 @@ class Vms : Message
     {
         DateTime dateTime = DateTime(1970, 1, 1);
 
-        dateTime.roll!"seconds"(timestamp);
+        if (timestamp > ulong.init) {
+            if (timestamp <= SysTime().toUnixTime()) {
+                dateTime.roll!"seconds"(timestamp);
+            } else {
+                throw new InvalidTimestampException(timestamp);
+            }
+        }
+
+        this(receivers, content, dateTime);
+    }
+
+    pure this(Receiver receiver, Content content, string dateString)
+    {
+        this([receiver], content, dateString);
+    }
+
+    pure this(Receiver[] receivers, Content content, string dateString)
+    {
+        DateTime dateTime;
+
+        try {
+            dateTime = DateTime.fromISOString(dateString);
+        } catch (DateTimeException exception) {
+            try {
+                dateTime = DateTime.fromISOExtString(dateString);
+            } catch (DateTimeException exception) {
+                try {
+                    dateTime = DateTime.fromSimpleString(dateString);
+                } catch (DateTimeException exception) {
+                    throw new InvalidDateStringException(dateString);
+                }
+            }
+        }
 
         this(receivers, content, dateTime);
     }
