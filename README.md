@@ -227,7 +227,6 @@ void main()
 - [ ] discount_group
 - [ ] expiration_date
 - [ ] fast
-- [ ] flash
 - [ ] group
 - [ ] idx
 - [ ] max_parts
@@ -243,6 +242,11 @@ void main()
 - [x] sender types
 - [x] single
 - [ ] skip_foreign
+
+### Flash
+- [ ] flash
+
+### WAP PUSH
 - [ ] WAP PUSH (udh)
 
 ### MMS
@@ -300,18 +304,21 @@ void main()
  * add tests (http://dlang.org/unittest.html)
  * use dstyle (http://dlang.org/dstyle.html)
  * use dub (http://code.dlang.org)
- * versions tags
+ * use versions tags
  * consider use contracts
  * move `RequestBuilder` to separate repository
  * rethink `Method`
- * consider use interfaces
- * consider use unions
+ * consider use `interface`
+ * consider use `union`
  * use `RedBlackTree` for `parameters` in `RequestBuilder`
  * redesign `mms.d` like `sms.d`
- * add timers to debug mode (http://wiki.dlang.org/Timing_Code)
+ * redesign `vms.d` like `sms.d`
+ * redesign `hlr.d` like `sms.d`
+ * add timers to `debug mode` (http://wiki.dlang.org/Timing_Code)
  * rethink current visibility (http://dlang.org/attribute.html#ProtectionAttribute)
- * create `ReceiverSet` that can not be empty
- * safe functions (http://dlang.org/function.html#safe-functions)
- * trusted functions (http://dlang.org/function.html#trusted-functions)
- * improve Response
- * add User constructor for hex string
+ * add `ReceiverSet` that can not be empty
+ * `@safe` functions (http://dlang.org/function.html#safe-functions)
+ * `@trusted` functions (http://dlang.org/function.html#trusted-functions)
+ * improve `Response`
+ * add `User` constructor for hex string
+ * rethink `VariableCollection`
