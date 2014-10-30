@@ -273,7 +273,7 @@ class Send : Method
         RequestBuilder createRequestBuilder()
         {
             RequestBuilder requestBuilder = new RequestBuilder;
-            ulong          timestamp      = SysTime(sms.config.date).toUnixTime();
+            long           timestamp      = SysTime(sms.config.date).toUnixTime();
 
             string[] receivers;
             string   from;

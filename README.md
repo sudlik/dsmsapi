@@ -313,3 +313,5 @@ void main()
  * create `ReceiverSet` that can not be empty
  * safe functions (http://dlang.org/function.html#safe-functions)
  * trusted functions (http://dlang.org/function.html#trusted-functions)
+ * improve Response
+ * add User constructor for hex string

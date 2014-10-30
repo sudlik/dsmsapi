@@ -94,7 +94,7 @@ class Send : Method
         RequestBuilder createRequestBuilder()
         {
             RequestBuilder requestBuilder = new RequestBuilder;
-            ulong          timestamp      = SysTime(vms.date).toUnixTime();
+            long           timestamp      = SysTime(vms.date).toUnixTime();
 
             string[] receivers;
 

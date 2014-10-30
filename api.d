@@ -22,12 +22,19 @@ class Response
 {
     private static const unexpectedResponse = "Lib error: unexpected API response";
 
-    long   count;
-    long   error;
-    Item[] list;
-    string message;
+	private bool isSuccess = false;
 
-    bool success = false;
+	immutable {
+	    long   count;
+	    long   error;
+	    Item[] list;
+	    string message;
+	}
+
+	@property pure bool success()
+	{
+		return isSuccess;
+	}
 
     this(JSONValue response)
     {
@@ -43,10 +50,13 @@ class Response
                 message = response["message"].str();
             }
         } else if ("count" in values && "list" in values) {
-            float points;
+			bool  hasUnexpected = false;
 
-            success = true;
-            count   = response["count"].integer();
+            float  points;
+			Item[] items;
+
+			isSuccess = true;
+            count     = response["count"].integer();
 
             foreach (JSONValue item; response["list"].array()) {
                 if (item["points"].type() == JSON_TYPE.FLOAT) {
@@ -56,18 +66,25 @@ class Response
                 } else if (item["points"].type() == JSON_TYPE.STRING) {
                     points = to!float(item["points"].str());
                 } else {
-                    message = unexpectedResponse;
+					hasUnexpected = true;
+					points        = 0;
                 }
 
-                list ~= Item(
+				items ~= Item(
                     to!ulong(item["id"].str()),
                     points,
                     to!ulong(item["number"].str()),
                     item["status"].str()
                 );
             }
+
+			if (hasUnexpected) {
+				message = unexpectedResponse;
+			}
+
+			list = to!(immutable Item[])(items);
         } else if ("id" in values && "price" in values && "number" in values && "status" in values) {
-            success = true;
+			isSuccess = true;
             count   = 1;
 
             list ~= Item(
@@ -83,7 +100,7 @@ class Response
 
     override string toString()
     {
-        if (success) {
+		if (isSuccess) {
             string response = format("Success! Count: %d", count);
 
             foreach (int i, Item item; list) {
@@ -135,8 +152,8 @@ class Api
         }
 
         Server server;
-        bool test;
-        User user;
+        bool   test;
+        User   user;
 
     public:
         pure this(User user, Server server = Server.init, bool test = false)
@@ -150,6 +167,8 @@ class Api
         {
             RequestBuilder requestBuilder = apiMethod.createRequestBuilder();
 
+			string response;
+
             requestBuilder.server = server;
 
             requestBuilder
@@ -161,12 +180,12 @@ class Api
                 requestBuilder.setParameter(new Parameter(ParamName.test, "1"));
             }
 
-            string response = matchFirst(requestBuilder.create().send(), pattern)[1];
+			response = requestBuilder.create().send();
 
             try {
-                return new Response(parseJSON(response));
+				return new Response(parseJSON(response));
             } catch (JSONException exception) {
-                return new Response(parseJSON(`{"error":0,"message":"Lib error: unexpected API response"}`));
+				return new Response(parseJSON(`{"error":0,"message":"Lib error. Unexpected API response: ` ~ response ~ `"}`));
             }
         }
 }

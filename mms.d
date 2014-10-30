@@ -32,12 +32,12 @@ class Mms : Message
         Subject  subject;
     }
 
-    pure this(Subject subject, Receiver receiver, Content content, ulong timestamp = ulong.init)
+    this(Subject subject, Receiver receiver, Content content, ulong timestamp = ulong.init)
     {
         this(subject, [receiver], content, timestamp);
     }
 
-    pure this(Subject subject, Receiver[] receivers, Content content, ulong timestamp = ulong.init)
+    this(Subject subject, Receiver[] receivers, Content content, ulong timestamp = ulong.init)
     {
         DateTime dateTime = DateTime(1970, 1, 1);
 
@@ -46,12 +46,12 @@ class Mms : Message
         this(subject, receivers, content, dateTime);
     }
 
-    pure this(Subject subject, Receiver receiver, Content content, string dateString)
+    this(Subject subject, Receiver receiver, Content content, string dateString)
     {
         this(subject, [receiver], content, dateString);
     }
 
-    pure this(Subject subject, Receiver[] receivers, Content content, string dateString)
+    this(Subject subject, Receiver[] receivers, Content content, string dateString)
     {
         DateTime dateTime;
 
@@ -72,7 +72,7 @@ class Mms : Message
         this(subject, receivers, content, dateTime);
     }
 
-    pure this(Subject subject, Receiver receiver, Content content, DateTime dateTime)
+    this(Subject subject, Receiver receiver, Content content, DateTime dateTime)
     {
         this(subject, [receiver], content, dateTime);
     }
@@ -102,7 +102,7 @@ class Send : Method
         RequestBuilder createRequestBuilder()
         {
             RequestBuilder requestBuilder = new RequestBuilder;
-            ulong          timestamp      = SysTime(mms.date).toUnixTime();
+            long           timestamp      = SysTime(mms.date).toUnixTime();
 
             string[] receivers;
 

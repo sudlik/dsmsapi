@@ -13,10 +13,7 @@ debug (WITHOUT_SEND) {
 import std.array        : empty;
 import std.conv         : to;
 import std.net.curl     : get;
-import std.socketstream : SocketStream;
 import std.uri          : encode;
-
-import std.socket: InternetAddress, TcpSocket;
 
 enum Server : string
 {
