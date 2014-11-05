@@ -3,14 +3,12 @@
 Client for SMSAPI REST API ([smsapi.pl/rest](http://smsapi.pl/rest)),
 written in D programming language ([dlang.org](http://dlang.org))
 ## Requirements
-* DMD 2.066
-* cURL
+* DMD (dmd v2.066)
+* cURL (libcurl3 v7.32)
 
 ## Installation
 `$ git clone git@github.com:sudlik/dsmsapi.git`
 ## Examples
-### Compilation
-`$ rdmd -debug -L-lphobos2 -L-l:libcurl.so.4 script`
 ### Shorter
 ``` D
 #!/usr/bin/env rdmd
@@ -217,7 +215,6 @@ void main()
 ## Implemented components
 ### SMS
 - [x] charset (encoding)
-- [ ] check account points
 - [ ] check_idx
 - [x] content (message)
 - [ ] data_coding
@@ -246,8 +243,8 @@ void main()
 ### Flash
 - [ ] flash
 
-### WAP PUSH
-- [ ] WAP PUSH (udh)
+### WAP PUSH (udh)
+- [ ] udh
 
 ### MMS
 - [ ] check_idx
@@ -273,8 +270,10 @@ void main()
 - [x] idx
 - [x] number
 
-### Subusers
-...
+### User
+- [ ] credits (check account points)
+- [ ] details
+- [ ] without_prefix
 
 ### Sender fields
 ...
@@ -303,6 +302,7 @@ void main()
  * add docs (http://dlang.org/ddoc.html)
  * add tests (http://dlang.org/unittest.html)
  * use dstyle (http://dlang.org/dstyle.html)
+ * versions tags
  * use dub (http://code.dlang.org)
  * use versions tags
  * consider use contracts

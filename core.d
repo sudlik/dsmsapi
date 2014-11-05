@@ -1,5 +1,10 @@
 module dsmsapi.core;
 
+version (linux) {
+    pragma(lib, ":libcurl.so.4");
+    pragma(lib, "phobos2");
+}
+
 debug {
     import std.stdio  : writeln;
     import std.string : strip;
