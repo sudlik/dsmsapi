@@ -274,12 +274,57 @@ void main()
 - [ ] credits (check account points)
 - [ ] details
 - [ ] without_prefix
+- [ ] add_user
+- [ ] pass
+- [ ] pass_api
+- [ ] limit
+- [ ] month_limit
+- [ ] senders
+- [ ] phonebook
+- [ ] active
+- [ ] info
+- [ ] without_prefix
+- [ ] set_user
+- [ ] list
+- [ ] 
 
 ### Sender fields
-...
+- [ ] add
+- [ ] delete
+- [ ] list
+- [ ] with_nat_names
+- [ ] default
 
 ### Phonebook
-...
+- [ ] get_group
+- [ ] list_groups
+- [ ] add_group
+- [ ] info
+- [ ] edit_group
+- [ ] name
+- [ ] delete_group
+- [ ] remove_contacts
+- [ ] get_contact
+- [ ] list_contacts
+- [ ] groups
+- [ ] text_search
+- [ ] gender
+- [ ] number
+- [ ] order_by
+- [ ] order_dir
+- [ ] limit
+- [ ] offset
+- [ ] add_contact
+- [ ] first_name
+- [ ] last_name
+- [ ] email
+- [ ] birthday
+- [ ] city
+- [ ] groups
+- [ ] edit_contact
+- [ ] add_to_group
+- [ ] remove_from_groups
+- [ ] delete_contact
 
 ## Additional features
 - [ ] content validator
