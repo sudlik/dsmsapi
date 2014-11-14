@@ -19,7 +19,7 @@ immutable struct Subject
 {
     string content;
 
-    pure string toString()
+    @safe pure string toString()
     {
         return content;
     }
@@ -32,12 +32,12 @@ class Mms : Message
         Subject  subject;
     }
 
-    this(Subject subject, Receiver receiver, Content content, ulong timestamp = ulong.init)
+    @safe this(Subject subject, Receiver receiver, Content content, ulong timestamp = ulong.init)
     {
         this(subject, [receiver], content, timestamp);
     }
 
-    this(Subject subject, Receiver[] receivers, Content content, ulong timestamp = ulong.init)
+    @safe this(Subject subject, Receiver[] receivers, Content content, ulong timestamp = ulong.init)
     {
         DateTime dateTime = DateTime(1970, 1, 1);
 
@@ -46,12 +46,12 @@ class Mms : Message
         this(subject, receivers, content, dateTime);
     }
 
-    this(Subject subject, Receiver receiver, Content content, string dateString)
+    @safe this(Subject subject, Receiver receiver, Content content, string dateString)
     {
         this(subject, [receiver], content, dateString);
     }
 
-    this(Subject subject, Receiver[] receivers, Content content, string dateString)
+    @safe this(Subject subject, Receiver[] receivers, Content content, string dateString)
     {
         DateTime dateTime;
 
@@ -72,12 +72,12 @@ class Mms : Message
         this(subject, receivers, content, dateTime);
     }
 
-    this(Subject subject, Receiver receiver, Content content, DateTime dateTime)
+    @safe this(Subject subject, Receiver receiver, Content content, DateTime dateTime)
     {
         this(subject, [receiver], content, dateTime);
     }
 
-    pure this(Subject subject, Receiver[] receivers, Content content, DateTime dateTime)
+    @safe pure this(Subject subject, Receiver[] receivers, Content content, DateTime dateTime)
     {
         this.subject     = subject;
         messageReceivers = receivers;
@@ -94,7 +94,7 @@ class Send : Method
         Mms mms;
 
     public:
-        pure this(Mms mms)
+        @safe pure this(Mms mms)
         {
             this.mms = mms;
         }

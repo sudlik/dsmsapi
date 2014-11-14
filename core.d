@@ -15,14 +15,14 @@ debug (WITHOUT_SEND) {
     import std.string : strip;
 }
 
-import std.array        : empty;
-import std.conv         : to;
-import std.net.curl     : get;
-import std.uri          : encode;
+import std.array    : empty;
+import std.conv     : to;
+import std.net.curl : get;
+import std.uri      : encode;
 
 enum Server : string
 {
-    def = "https://ssl.smsapi.pl/",
+    def         = "https://ssl.smsapi.pl/",
     alternative = "https://ssl2.smsapi.pl/",
 }
 
@@ -63,7 +63,7 @@ struct Receiver
 {
     immutable uint phone;
 
-    pure string toString()
+    @safe pure string toString()
     {
         return to!string(phone);
     }
@@ -74,7 +74,7 @@ immutable struct Variable
     ParamName name;
     string    value;
 
-    pure this(ParamName paramName, string val)
+    @safe pure this(ParamName paramName, string val)
     {
         name  = paramName;
         value = val;
@@ -83,7 +83,7 @@ immutable struct Variable
 
 class InvalidDateStringException : Exception
 {
-    pure this(string dateTime)
+    @safe pure this(string dateTime)
     {
         super("Invalid date string: " ~ dateTime);
     }
@@ -91,7 +91,7 @@ class InvalidDateStringException : Exception
 
 class InvalidTimestampException : Exception
 {
-    pure this(ulong timestamp)
+    @safe pure this(ulong timestamp)
     {
         super("Timestamp is invalid: " ~ to!string(timestamp) ~ ". Set future date or omit it.");
     }
@@ -99,7 +99,7 @@ class InvalidTimestampException : Exception
 
 class VariableAlreadyAddedException : Exception
 {
-    pure this(string name)
+    @safe pure this(string name)
     {
         super("Variable already added: " ~ name);
     }
@@ -109,20 +109,20 @@ class Content
 {
     private VariableCollection variableCollection;
 
-    @property pure VariableCollection variables()
+    immutable string value;
+
+    @safe @property pure VariableCollection variables()
     {
         return variableCollection;
     }
 
-    immutable string value;
-
-    pure this(string content, VariableCollection variables = new VariableCollection)
+    @safe pure this(string content, VariableCollection variables = new VariableCollection)
     {
-        value = content;
+        value              = content;
         variableCollection = variables;
     }
 
-    pure override string toString()
+    @safe pure override string toString()
     {
         return value;
     }
@@ -132,12 +132,12 @@ class VariableCollection
 {
     private Variable[] variables;
 
-    @property pure Variable[] all()
+    @safe @property pure Variable[] all()
     {
         return variables;
     }
 
-    VariableCollection set(Variable[] variables)
+    @safe VariableCollection set(Variable[] variables)
     {
         foreach (Variable variable; variables) {
             add(variable);
@@ -146,7 +146,7 @@ class VariableCollection
         return this;
     }
 
-    VariableCollection add(Variable variable)
+    @safe VariableCollection add(Variable variable)
     {
         foreach (Variable var; variables) {
             if (variable.name == var.name) {
@@ -172,12 +172,12 @@ abstract class Message
     Receiver[]  messageReceivers;
     Content     messageContent;
 
-    @property pure Receiver[] receivers()
+    @safe @property pure Receiver[] receivers()
     {
         return messageReceivers;
     }
 
-    @property pure Content content()
+    @safe @property pure Content content()
     {
         return messageContent;
     }
@@ -193,8 +193,8 @@ class Parameter
 
     this(string name, string value)
     {
-        this.name = name;
-        this.value = encode(value);
+        this.name   = name;
+        this.value  = encode(value);
         this.values = [];
     }
 
@@ -202,7 +202,7 @@ class Parameter
     {
         string[] vals;
 
-        this.name = name;
+        this.name  = name;
         this.value = string.init;
 
         foreach (string value; values) {
@@ -221,17 +221,17 @@ class RequestBuilder
         Server            serverName;
 
     public:
-        @property pure Resource resource(Resource resource)
+        @safe @property pure Resource resource(Resource resource)
         {
             return methodResource = resource;
         }
 
-        @property pure Server server(Server server)
+        @safe @property pure Server server(Server server)
         {
             return serverName = server;
         }
 
-        pure RequestBuilder setParameter(Parameter parameter)
+        @safe pure RequestBuilder setParameter(Parameter parameter)
         {
             parameters[parameter.name] = parameter;
 

@@ -10,7 +10,7 @@ const pattern = `[a-zA-Z0-9]{0,255}`;
 
 class InvalidIdxException : Exception
 {
-    pure this(string name)
+    @safe pure this(string name)
     {
         super(`Idx "` ~ name ~ `" does not match pattern: "/` ~ pattern ~ `/"`);
     }
@@ -23,7 +23,7 @@ class Hlr
         int[]    numbers;
     }
 
-    this(int[] numbers, string[] idxes = [])
+    @safe this(int[] numbers, string[] idxes = [])
     {
         this.numbers = to!(immutable int[])(numbers);
 
@@ -50,7 +50,7 @@ class Check : Method
         Hlr hlr;
 
     public:
-        pure this(Hlr hlr)
+        @safe pure this(Hlr hlr)
         {
             this.hlr = hlr;
         }

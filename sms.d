@@ -61,7 +61,7 @@ abstract class Sms : Message
     }
 
     protected:
-        pure this(Type type, Sender sender, Receiver[] receivers, Content content, Config config)
+        @safe pure this(Type type, Sender sender, Receiver[] receivers, Content content, Config config)
         {
             this.type        = type;
             this.sender      = sender;
@@ -70,7 +70,7 @@ abstract class Sms : Message
             this.config      = config;
         }
 
-        pure this(Type type, Receiver[] receivers, Content content, Config config)
+        @safe pure this(Type type, Receiver[] receivers, Content content, Config config)
         {
             this(type, Sender(), receivers, content, config);
         }
@@ -78,12 +78,12 @@ abstract class Sms : Message
 
 class Pattern : Content
 {
-    pure this(string value)
+    @safe pure this(string value)
     {
         super(value);
     }
 
-    pure this(string value, VariableCollection variableCollection)
+    @safe pure this(string value, VariableCollection variableCollection)
     {
         super(value, variableCollection);
     }
@@ -91,7 +91,7 @@ class Pattern : Content
 
 class Eco : Sms
 {
-    pure this(Receiver[] receivers, Content content, Config config)
+    @safe pure this(Receiver[] receivers, Content content, Config config)
     {
         super(Type.eco, receivers, content, config);
     }
@@ -99,7 +99,7 @@ class Eco : Sms
 
 class Pro : Sms
 {
-    pure this(Sender sender, Receiver[] receivers, Content content, Config config)
+    @safe pure this(Sender sender, Receiver[] receivers, Content content, Config config)
     {
         super(Type.pro, sender, receivers, content, config);
     }
@@ -107,7 +107,7 @@ class Pro : Sms
 
 class TwoWay : Sms
 {
-    pure this(Receiver[] receivers, Content content, Config config)
+    @safe pure this(Receiver[] receivers, Content content, Config config)
     {
         super(Type.twoWay, receivers, content, config);
     }
@@ -115,7 +115,7 @@ class TwoWay : Sms
 
 class EmptyReceiversException : Exception
 {
-    pure this(string message = string.init)
+    @safe pure this(string message = string.init)
     {
         super("Receivers can not be empty");
     }
@@ -135,22 +135,22 @@ class Builder
         DateTime   sendDate;
 
     public:
-        @property pure Charset charset(Charset charset)
+        @safe @property pure Charset charset(Charset charset)
         {
             return messageCharset = charset;
         }
 
-        @property pure bool normalize(bool normalize)
+        @safe @property pure bool normalize(bool normalize)
         {
             return normalizeMessage = normalize;
         }
 
-        @property pure bool single(bool single)
+        @safe @property pure bool single(bool single)
         {
             return singleMessage = single;
         }
 
-        @property pure DateTime date(ulong timestamp)
+        @safe @property pure DateTime date(ulong timestamp)
         {
             DateTime dateTime = DateTime(1970, 1, 1);
 
@@ -159,7 +159,7 @@ class Builder
             return sendDate = dateTime;
         }
 
-        @property pure DateTime date(string date)
+        @safe @property pure DateTime date(string date)
         {
             DateTime dateTime;
 
@@ -180,17 +180,17 @@ class Builder
             return sendDate = dateTime;
         }
 
-        @property pure DateTime date(DateTime dateTime)
+        @safe @property pure DateTime date(DateTime dateTime)
         {
             return sendDate = dateTime;
         }
 
-        @property pure VariableCollection variables(VariableCollection variables)
+        @safe @property pure VariableCollection variables(VariableCollection variables)
         {
             return variableCollection = variables;
         }
 
-        this(Sender sender, Content content, Receiver[] receivers)
+        @safe this(Sender sender, Content content, Receiver[] receivers)
         {
             this.sender  = sender;
             this.content = content;
@@ -198,36 +198,36 @@ class Builder
             setReceivers(receivers);
         }
 
-        this(Content content, Receiver[] receivers)
+        @safe this(Content content, Receiver[] receivers)
         {
             this.content = content;
 
             setReceivers(receivers);
         }
 
-        pure this(Content content, Receiver receiver)
+        @safe pure this(Content content, Receiver receiver)
         {
             this.content   = content;
             this.receivers = [receiver];
         }
 
-        Eco createEco()
+        @safe Eco createEco()
         {
             return new Eco(receivers, createContent(), createConfig());
         }
 
-        Pro createPro()
+        @safe Pro createPro()
         {
             return new Pro(sender, receivers, createContent(), createConfig());
         }
 
-        TwoWay createTwoWay()
+        @safe TwoWay createTwoWay()
         {
             return new TwoWay(receivers, createContent(), createConfig());
         }
 
     private:
-        Builder setReceivers(Receiver[] receivers)
+        @safe Builder setReceivers(Receiver[] receivers)
         {
             if (empty(receivers)) {
                 throw new EmptyReceiversException;
@@ -238,12 +238,12 @@ class Builder
             return this;
         }
 
-        Config createConfig()
+        @safe Config createConfig()
         {
             return Config(messageCharset, sendDate, normalizeMessage, singleMessage);
         }
 
-        Content createContent()
+        @safe Content createContent()
         {
             if (!empty(variableCollection.all())) {
                 if(cast(Pattern)this.content) {
@@ -265,7 +265,7 @@ class Send : Method
         Sms sms;
 
     public:
-        pure this(Sms sms)
+        @safe pure this(Sms sms)
         {
             this.sms = sms;
         }

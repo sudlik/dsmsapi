@@ -19,12 +19,12 @@ class Vms : Message
 {
     immutable DateTime date;
 
-    pure this(Receiver receiver, Content content, ulong timestamp = ulong.init)
+    @safe pure this(Receiver receiver, Content content, ulong timestamp = ulong.init)
     {
         this([receiver], content, timestamp);
     }
 
-    pure this(Receiver[] receivers, Content content, ulong timestamp = ulong.init)
+    @safe pure this(Receiver[] receivers, Content content, ulong timestamp = ulong.init)
     {
         DateTime dateTime = DateTime(1970, 1, 1);
 
@@ -39,12 +39,12 @@ class Vms : Message
         this(receivers, content, dateTime);
     }
 
-    pure this(Receiver receiver, Content content, string dateString)
+    @safe pure this(Receiver receiver, Content content, string dateString)
     {
         this([receiver], content, dateString);
     }
 
-    pure this(Receiver[] receivers, Content content, string dateString)
+    @safe pure this(Receiver[] receivers, Content content, string dateString)
     {
         DateTime dateTime;
 
@@ -65,12 +65,12 @@ class Vms : Message
         this(receivers, content, dateTime);
     }
 
-    pure this(Receiver receiver, Content content, DateTime dateTime)
+    @safe pure this(Receiver receiver, Content content, DateTime dateTime)
     {
         this([receiver], content, dateTime);
     }
 
-    pure this(Receiver[] receivers, Content content, DateTime dateTime)
+    @safe pure this(Receiver[] receivers, Content content, DateTime dateTime)
     {
         messageReceivers = receivers;
         messageContent   = content;
@@ -86,7 +86,7 @@ class Send : Method
         Vms vms;
 
     public:
-        pure this(Vms vms)
+        @safe pure this(Vms vms)
         {
             this.vms = vms;
         }

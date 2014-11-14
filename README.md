@@ -302,7 +302,6 @@ void main()
  * add docs (http://dlang.org/ddoc.html)
  * add tests (http://dlang.org/unittest.html)
  * use dstyle (http://dlang.org/dstyle.html)
- * versions tags
  * use dub (http://code.dlang.org)
  * use versions tags
  * consider use contracts
@@ -317,8 +316,9 @@ void main()
  * add timers to `debug mode` (http://wiki.dlang.org/Timing_Code)
  * rethink current visibility (http://dlang.org/attribute.html#ProtectionAttribute)
  * add `ReceiverSet` that can not be empty
- * `@safe` functions (http://dlang.org/function.html#safe-functions)
- * `@trusted` functions (http://dlang.org/function.html#trusted-functions)
  * improve `Response`
  * add `User` constructor for hex string
  * rethink `VariableCollection`
+ * mark functions with `@trusted` attribute (http://dlang.org/function.html#trusted-functions)
+ * mark functions with `@system` attribute (http://dlang.org/function.html)
+ * add tests for SMSAPI
