@@ -44,12 +44,34 @@ immutable struct Sender
     string name;
 }
 
+class InvalidExpirationDateException : Exception
+{
+    @safe pure this(DateTime dateTime)
+    {
+        super("Invalid expiration date: " ~ dateTime ~ ". Expiration date must be ");
+    }
+}
+
 immutable struct Config
 {
     Charset  charset;
-    DateTime date;
+    DateTime expiration;
     bool     normalize;
+    DateTime send;
     bool     single;
+    
+    this(Charset  charset, DateTime expiration, bool normalize, DateTime send, bool single)
+    {
+        if ((SysTime(sms.config.send).toUnixTime() + 900) > (SysTime(sms.config.expiration).toUnixTime()) {
+            throw new InvalidExpirationDateException();
+        }
+        
+        Charset  = charset;
+        DateTime = expiration;
+        bool     = normalize;
+        DateTime = send;
+        bool     = single;
+    }
 }
 
 abstract class Sms : Message
@@ -150,7 +172,7 @@ class Builder
             return singleMessage = single;
         }
 
-        @safe @property pure DateTime date(ulong timestamp)
+        @safe @property pure DateTime send(ulong timestamp)
         {
             DateTime dateTime = DateTime(1970, 1, 1);
 
@@ -159,7 +181,7 @@ class Builder
             return sendDate = dateTime;
         }
 
-        @safe @property pure DateTime date(string date)
+        @safe @property pure DateTime send(string date)
         {
             DateTime dateTime;
 
@@ -180,9 +202,44 @@ class Builder
             return sendDate = dateTime;
         }
 
-        @safe @property pure DateTime date(DateTime dateTime)
+        @safe @property pure DateTime send(DateTime dateTime)
         {
             return sendDate = dateTime;
+        }
+
+        @safe @property pure DateTime expiration(ulong timestamp)
+        {
+            DateTime dateTime = DateTime(1970, 1, 1);
+
+            dateTime.roll!"seconds"(timestamp);
+
+            return expirationDate = dateTime;
+        }
+
+        @safe @property pure DateTime expiration(string date)
+        {
+            DateTime dateTime;
+
+            try {
+                dateTime = DateTime.fromISOString(date);
+            } catch (DateTimeException exception) {
+                try {
+                    dateTime = DateTime.fromISOExtString(date);
+                } catch (DateTimeException exception) {
+                    try {
+                        dateTime = DateTime.fromSimpleString(date);
+                    } catch (DateTimeException exception) {
+                        throw new InvalidDateStringException(date);
+                    }
+                }
+            }
+
+            return expirationDate = dateTime;
+        }
+
+        @safe @property pure DateTime expiration(DateTime dateTime)
+        {
+            return expirationDate = dateTime;
         }
 
         @safe @property pure VariableCollection variables(VariableCollection variables)
@@ -240,7 +297,7 @@ class Builder
 
         @safe Config createConfig()
         {
-            return Config(messageCharset, sendDate, normalizeMessage, singleMessage);
+            return Config(messageCharset, expirationDate, normalizeMessage, sendDate, singleMessage);
         }
 
         @safe Content createContent()
@@ -272,8 +329,9 @@ class Send : Method
 
         RequestBuilder createRequestBuilder()
         {
-            RequestBuilder requestBuilder = new RequestBuilder;
-            long           timestamp      = SysTime(sms.config.date).toUnixTime();
+            RequestBuilder requestBuilder      = new RequestBuilder;
+            long           sendTimestamp       = SysTime(sms.config.send).toUnixTime();
+            long           expirationTimestamp = SysTime(sms.config.expiration).toUnixTime();
 
             string[] receivers;
             string   from;
@@ -297,8 +355,12 @@ class Send : Method
                 requestBuilder.setParameter(new Parameter(ParamName.encoding, sms.config.charset));
             }
 
-            if (timestamp > SysTime().toUnixTime()) {
-                requestBuilder.setParameter(new Parameter(ParamName.date, text(timestamp)));
+            if (sendTimestamp > SysTime().toUnixTime()) {
+                requestBuilder.setParameter(new Parameter(ParamName.date, text(sendTimestamp)));
+            }
+
+            if (expirationTimestamp > SysTime().toUnixTime()) {
+                requestBuilder.setParameter(new Parameter(ParamName.date, text(expirationTimestamp)));
             }
 
             if (sms.config.normalize) {
