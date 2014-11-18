@@ -70,18 +70,23 @@ struct SendDate
 
         this(DateTime send = DateTime.init, DateTime expiration = DateTime.init)
         {
+            long    timestamp;
+            SysTime maxSysTime;
+
             SysTime sendSysTime    = SysTime(send);
-            long    timestamp      = sendSysTime.toUnixTime();
             SysTime currentSysTime = Clock.currTime();
 
             if (send == DateTime.init) {
                 isImmediately = true;
             } else {
-                currentSysTime.add!"months"(3);
+                maxSysTime = currentSysTime;
+                timestamp  = sendSysTime.toUnixTime();
 
-                if (timestamp <= Clock.currTime().toUnixTime()) {
+                maxSysTime.add!"months"(3);
+
+                if (timestamp <= currentSysTime.toUnixTime()) {
                     throw new TooLowSendDateException(send);
-                } else if (timestamp > currentSysTime.toUnixTime()) {
+                } else if (timestamp > maxSysTime.toUnixTime()) {
                     throw new TooHighSendDateException(send);
                 }
 
@@ -89,7 +94,7 @@ struct SendDate
             }
 
             if (expiration != DateTime.init) {
-                setExpiration(expiration, sendSysTime);
+                setExpiration(expiration, send == DateTime.init ? currentSysTime : sendSysTime);
             }
         }
 
@@ -130,7 +135,11 @@ class TooHighExpirationDateException : Exception
 {
     @safe pure this(DateTime expirationDate)
     {
-        super("Too high expiration date: " ~ expirationDate.toSimpleString() ~ " (expirationDate < cuurentDate + 48 hours)");
+        super(
+            "Too high expiration date: "
+            ~ expirationDate.toSimpleString()
+            ~ " (expirationDate < currentDate + 48 hours)"
+        );
     }
 }
 
@@ -363,19 +372,19 @@ class Send : Method
                 requestBuilder.setParameter(new Parameter(ParamName.encoding, sms.config.charset));
             }
 
-            if (sms.config.sendDate != SendDate.init) {
-                if (sms.config.sendDate.immediately) {
-                    requestBuilder.setParameter(
-                        new Parameter(ParamName.date, text(SysTime(sms.config.sendDate.send).toUnixTime()))
-                    );
-                } else if (sms.config.sendDate.expiration != DateTime.init) {
-                    requestBuilder.setParameter(
-                        new Parameter(
-                            ParamName.expirationDate,
-                            text(SysTime(sms.config.sendDate.expiration).toUnixTime())
-                        )
-                    );
-                }
+            if (!sms.config.sendDate.immediately) {
+                requestBuilder.setParameter(
+                    new Parameter(ParamName.date, text(SysTime(sms.config.sendDate.send).toUnixTime()))
+                );
+            }
+
+            if (sms.config.sendDate.expiration != DateTime.init) {
+                requestBuilder.setParameter(
+                    new Parameter(
+                        ParamName.expirationDate,
+                        text(SysTime(sms.config.sendDate.expiration).toUnixTime())
+                    )
+                );
             }
 
             if (sms.config.normalize) {

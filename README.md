@@ -222,7 +222,7 @@ void main()
 - [ ] date_validate
 - [ ] details
 - [ ] discount_group
-- [ ] expiration_date
+- [x] expiration_date
 - [ ] fast
 - [ ] group
 - [ ] idx
@@ -350,7 +350,6 @@ void main()
  * use dub (http://code.dlang.org)
  * use versions tags
  * consider use contracts
- * move `RequestBuilder` to separate repository
  * rethink `Method`
  * consider use `interface`
  * consider use `union`
