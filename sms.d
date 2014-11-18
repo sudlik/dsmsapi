@@ -1,8 +1,9 @@
 module dsmsapi.sms;
 
+import core.time    : dur;
 import std.array    : empty;
 import std.conv     : text;
-import std.datetime : DateTime, DateTimeException, SysTime;
+import std.datetime : Clock, DateTime, DateTimeException, SysTime;
 
 import dsmsapi.core :
     Content,
@@ -44,12 +45,109 @@ immutable struct Sender
     string name;
 }
 
+struct SendDate
+{
+    private:
+        DateTime expirationDate;
+        bool     isImmediately = false;
+        DateTime sendDate;
+
+    public:
+        @safe @property pure immutable DateTime expiration()
+        {
+            return expirationDate;
+        }
+
+        @safe @property pure immutable bool immediately()
+        {
+            return isImmediately;
+        }
+
+        @safe @property pure immutable DateTime send()
+        {
+            return sendDate;
+        }
+
+        this(DateTime send = DateTime.init, DateTime expiration = DateTime.init)
+        {
+            SysTime sendSysTime    = SysTime(send);
+            long    timestamp      = sendSysTime.toUnixTime();
+            SysTime currentSysTime = Clock.currTime();
+
+            if (send == DateTime.init) {
+                isImmediately = true;
+            } else {
+                currentSysTime.add!"months"(3);
+
+                if (timestamp <= Clock.currTime().toUnixTime()) {
+                    throw new TooLowSendDateException(send);
+                } else if (timestamp > currentSysTime.toUnixTime()) {
+                    throw new TooHighSendDateException(send);
+                }
+
+                sendDate = send;
+            }
+
+            if (expiration != DateTime.init) {
+                setExpiration(expiration, sendSysTime);
+            }
+        }
+
+    private:
+        @safe void setExpiration(DateTime expiration, SysTime send)
+        {
+            long    timestamp = SysTime(expiration).toUnixTime();
+            SysTime from      = send + dur!"minutes"(15);
+            SysTime to        = send + dur!"hours"(48);
+
+            if (timestamp < from.toUnixTime()) {
+                throw new TooLowExpirationDateException(expiration);
+            } else if (timestamp > to.toUnixTime()) {
+                throw new TooHighExpirationDateException(expiration);
+            }
+
+            expirationDate = expiration;
+        }
+}
+
 immutable struct Config
 {
     Charset  charset;
-    DateTime date;
     bool     normalize;
+    SendDate sendDate;
     bool     single;
+}
+
+class TooLowExpirationDateException : Exception
+{
+    @safe pure this(DateTime expirationDate)
+    {
+        super("Too low expiration date: " ~ expirationDate.toSimpleString() ~ " (expirationDate > sendDate + 15 min)");
+    }
+}
+
+class TooHighExpirationDateException : Exception
+{
+    @safe pure this(DateTime expirationDate)
+    {
+        super("Too high expiration date: " ~ expirationDate.toSimpleString() ~ " (expirationDate < cuurentDate + 48 hours)");
+    }
+}
+
+class TooLowSendDateException : Exception
+{
+    @safe pure this(DateTime sendDate)
+    {
+        super("Too low send date: " ~ sendDate.toSimpleString() ~ " (sendDate > currentDate)");
+    }
+}
+
+class TooHighSendDateException : Exception
+{
+    @safe pure this(DateTime sendDate)
+    {
+        super("Too high send date: " ~ sendDate.toSimpleString() ~ " (sendDate < currentDate + 3 months)");
+    }
 }
 
 abstract class Sms : Message
@@ -74,6 +172,14 @@ abstract class Sms : Message
         {
             this(type, Sender(), receivers, content, config);
         }
+}
+
+class EmptyReceiversException : Exception
+{
+    @safe pure this()
+    {
+        super("Receivers can not be empty");
+    }
 }
 
 class Pattern : Content
@@ -113,14 +219,6 @@ class TwoWay : Sms
     }
 }
 
-class EmptyReceiversException : Exception
-{
-    @safe pure this(string message = string.init)
-    {
-        super("Receivers can not be empty");
-    }
-}
-
 class Builder
 {
     private:
@@ -132,7 +230,7 @@ class Builder
         Content    content;
         Receiver[] receivers;
         Sender     sender;
-        DateTime   sendDate;
+        SendDate   sendDate;
 
     public:
         @safe @property pure Charset charset(Charset charset)
@@ -150,39 +248,9 @@ class Builder
             return singleMessage = single;
         }
 
-        @safe @property pure DateTime date(ulong timestamp)
+        @safe @property pure SendDate send(SendDate send)
         {
-            DateTime dateTime = DateTime(1970, 1, 1);
-
-            dateTime.roll!"seconds"(timestamp);
-
-            return sendDate = dateTime;
-        }
-
-        @safe @property pure DateTime date(string date)
-        {
-            DateTime dateTime;
-
-            try {
-                dateTime = DateTime.fromISOString(date);
-            } catch (DateTimeException exception) {
-                try {
-                    dateTime = DateTime.fromISOExtString(date);
-                } catch (DateTimeException exception) {
-                    try {
-                        dateTime = DateTime.fromSimpleString(date);
-                    } catch (DateTimeException exception) {
-                        throw new InvalidDateStringException(date);
-                    }
-                }
-            }
-
-            return sendDate = dateTime;
-        }
-
-        @safe @property pure DateTime date(DateTime dateTime)
-        {
-            return sendDate = dateTime;
+            return sendDate = send;
         }
 
         @safe @property pure VariableCollection variables(VariableCollection variables)
@@ -205,10 +273,9 @@ class Builder
             setReceivers(receivers);
         }
 
-        @safe pure this(Content content, Receiver receiver)
+        @safe this(Content content, Receiver receiver)
         {
-            this.content   = content;
-            this.receivers = [receiver];
+            this(content, [receiver]);
         }
 
         @safe Eco createEco()
@@ -240,7 +307,7 @@ class Builder
 
         @safe Config createConfig()
         {
-            return Config(messageCharset, sendDate, normalizeMessage, singleMessage);
+            return Config(messageCharset, normalizeMessage, sendDate, singleMessage);
         }
 
         @safe Content createContent()
@@ -273,7 +340,6 @@ class Send : Method
         RequestBuilder createRequestBuilder()
         {
             RequestBuilder requestBuilder = new RequestBuilder;
-            long           timestamp      = SysTime(sms.config.date).toUnixTime();
 
             string[] receivers;
             string   from;
@@ -297,8 +363,19 @@ class Send : Method
                 requestBuilder.setParameter(new Parameter(ParamName.encoding, sms.config.charset));
             }
 
-            if (timestamp > SysTime().toUnixTime()) {
-                requestBuilder.setParameter(new Parameter(ParamName.date, text(timestamp)));
+            if (sms.config.sendDate != SendDate.init) {
+                if (sms.config.sendDate.immediately) {
+                    requestBuilder.setParameter(
+                        new Parameter(ParamName.date, text(SysTime(sms.config.sendDate.send).toUnixTime()))
+                    );
+                } else if (sms.config.sendDate.expiration != DateTime.init) {
+                    requestBuilder.setParameter(
+                        new Parameter(
+                            ParamName.expirationDate,
+                            text(SysTime(sms.config.sendDate.expiration).toUnixTime())
+                        )
+                    );
+                }
             }
 
             if (sms.config.normalize) {

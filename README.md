@@ -286,7 +286,7 @@ void main()
 - [ ] without_prefix
 - [ ] set_user
 - [ ] list
-- [ ] 
+- [ ]
 
 ### Sender fields
 - [ ] add
@@ -362,3 +362,4 @@ void main()
  * add `ReceiverSet` that can not be empty
  * rethink `VariableCollection`
  * add tests for SMSAPI
+ * create `Message` with internally choosen type (SMS, MMS...)

@@ -41,7 +41,7 @@ class Mms : Message
     {
         DateTime dateTime = DateTime(1970, 1, 1);
 
-        dateTime.roll!"seconds"(timestamp);
+        dateTime += dur!"seconds"(timestamp);
 
         this(subject, receivers, content, dateTime);
     }
