@@ -286,7 +286,7 @@ void main()
 - [ ] without_prefix
 - [ ] set_user
 - [ ] list
-- [ ] 
+- [ ]
 
 ### Sender fields
 - [ ] add
@@ -367,3 +367,4 @@ void main()
  * mark functions with `@trusted` attribute (http://dlang.org/function.html#trusted-functions)
  * mark functions with `@system` attribute (http://dlang.org/function.html)
  * add tests for SMSAPI
+ * create `Message` and internally choose type (SMS, MMS...)
