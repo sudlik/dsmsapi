@@ -286,7 +286,6 @@ void main()
 - [ ] without_prefix
 - [ ] set_user
 - [ ] list
-- [ ]
 
 ### Sender fields
 - [ ] add
@@ -362,3 +361,5 @@ void main()
  * rethink `VariableCollection`
  * add tests for SMSAPI
  * create `Message` with internally choosen type (SMS, MMS...)
+ * api error codes as excepetions
+ * move `ParamName` to classes
