@@ -82,7 +82,7 @@ class Response
                 message = unexpectedResponse;
             }
 
-            list = to!(immutable Item[])(items);
+            list = cast(immutable Item[])items;
         } else if ("id" in values && "price" in values && "number" in values && "status" in values) {
             isSuccess = true;
             count     = 1;
@@ -185,7 +185,9 @@ class Api
             try {
                 return new Response(parseJSON(response));
             } catch (JSONException exception) {
-                return new Response(parseJSON(`{"error":0,"message":"Lib error. Unexpected API response: ` ~ response ~ `"}`));
+                return new Response(
+                    parseJSON(`{"error":0,"message":"Lib error. Unexpected API response: ` ~ response ~ `"}`)
+                );
             }
         }
 }

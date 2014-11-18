@@ -20,7 +20,7 @@ import dsmsapi.core :
 
 enum Charset : string
 {
-    def         = string.init,
+    default_    = "default",
     iso88591    = "iso-8859-1",
     iso88592    = "iso-8859-2",
     iso88593    = "iso-8859-3",

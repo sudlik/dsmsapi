@@ -358,12 +358,7 @@ void main()
  * redesign `mms.d` like `sms.d`
  * redesign `vms.d` like `sms.d`
  * redesign `hlr.d` like `sms.d`
- * add timers to `debug mode` (http://wiki.dlang.org/Timing_Code)
  * rethink current visibility (http://dlang.org/attribute.html#ProtectionAttribute)
  * add `ReceiverSet` that can not be empty
- * improve `Response`
- * add `User` constructor for hex string
  * rethink `VariableCollection`
- * mark functions with `@trusted` attribute (http://dlang.org/function.html#trusted-functions)
- * mark functions with `@system` attribute (http://dlang.org/function.html)
  * add tests for SMSAPI

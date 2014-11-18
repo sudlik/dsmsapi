@@ -2,38 +2,35 @@ module dsmsapi.hlr;
 
 import std.array : empty, join;
 import std.conv  : to;
-import std.regex : matchFirst;
 
-import dsmsapi.core : Method, Parameter, ParamName, RequestBuilder, Resource;
-
-const pattern = `[a-zA-Z0-9]{0,255}`;
-
-class InvalidIdxException : Exception
-{
-    @safe pure this(string name)
-    {
-        super(`Idx "` ~ name ~ `" does not match pattern: "/` ~ pattern ~ `/"`);
-    }
-}
+import dsmsapi.core : Idx, InvalidIdxException, Method, Parameter, ParamName, RequestBuilder, Resource;
 
 class Hlr
 {
     immutable {
-        string[] idxes;
-        int[]    numbers;
+        Idx[] idxes;
+        int[] numbers;
     }
 
-    @safe this(int[] numbers, string[] idxes = [])
+    pure this(int[] numbers, Idx[] idxes = [])
     {
+        this.idxes   = to!(immutable Idx[])(idxes);
         this.numbers = to!(immutable int[])(numbers);
+    }
 
-        foreach (string idx; idxes) {
-            if (matchFirst(idx, pattern).length() != 1) {
-                throw new InvalidIdxException(idx);
-            }
-        }
+    pure this(int number, Idx idx)
+    {
+        this([number], [idx]);
+    }
 
-        this.idxes = to!(immutable string[])(idxes);
+    pure this(int number, Idx idxes[])
+    {
+        this([number], idxes);
+    }
+
+    pure this(int[] numbers, Idx idx)
+    {
+        this(numbers, [idx]);
     }
 }
 

@@ -18,11 +18,12 @@ debug (WITHOUT_SEND) {
 import std.array    : empty;
 import std.conv     : to;
 import std.net.curl : get;
+import std.regex    : matchFirst;
 import std.uri      : encode;
 
 enum Server : string
 {
-    def         = "https://ssl.smsapi.pl/",
+    default_    = "https://ssl.smsapi.pl/",
     alternative = "https://ssl2.smsapi.pl/",
 }
 
@@ -69,6 +70,27 @@ struct Receiver
     }
 }
 
+struct Idx
+{
+    static const pattern = `[a-zA-Z0-9]{0,255}`;
+
+    immutable string idx;
+
+    @safe this(string idx)
+    {
+        this.idx = idx;
+
+        if (matchFirst(idx, pattern).length() != 1) {
+            throw new InvalidIdxException(idx);
+        }
+    }
+
+    @safe pure string toString()
+    {
+        return idx;
+    }
+}
+
 immutable struct Variable
 {
     ParamName name;
@@ -102,6 +124,14 @@ class VariableAlreadyAddedException : Exception
     @safe pure this(string name)
     {
         super("Variable already added: " ~ name);
+    }
+}
+
+class InvalidIdxException : Exception
+{
+    @safe pure this(string name)
+    {
+        super(`Idx "` ~ name ~ `" does not match pattern: "/` ~ Idx.pattern ~ `/"`);
     }
 }
 
@@ -209,7 +239,7 @@ class Parameter
             vals ~= encode(value);
         }
 
-        this.values = to!(immutable string[])(vals);
+        this.values = cast(immutable string[])vals;
     }
 }
 
@@ -270,12 +300,12 @@ class Request
         this.url = url;
 
         debug {
-            writeln("[DEBUG] REQUEST HEADERS:");
+            writeln("[DEBUG] URL:");
             writeln(url);
         }
 
         debug (WITHOUT_SEND) {
-            writeln("[DEBUG] REQUEST HEADERS:");
+            writeln("[DEBUG] URL:");
             writeln(url);
         }
     }
@@ -289,7 +319,7 @@ class Request
 
             return `0{"error":0,"message":""}0`;
         } else {
-            content = to!string(get(url));
+            content = cast(string)get(url);
 
             debug {
                 writeln("[DEBUG] RESPONSE:");
