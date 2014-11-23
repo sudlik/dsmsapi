@@ -6,19 +6,18 @@ version (linux) {
 }
 
 debug {
-    import std.stdio  : writeln;
-    import std.string : strip;
+    import std.stdio : writeln;
 }
 
 debug (WITHOUT_SEND) {
-    import std.stdio  : writeln;
-    import std.string : strip;
+    import std.stdio : writeln;
 }
 
 import std.array    : empty;
 import std.conv     : to;
 import std.net.curl : get;
 import std.regex    : matchFirst;
+import std.traits   : ParameterTypeTuple;
 import std.uri      : encode;
 
 enum Server : string
@@ -92,15 +91,13 @@ struct Idx
     }
 }
 
-immutable struct Variable
+immutable struct Variables
 {
-    ParamName name;
-    string    value;
+    string param1, param2, param3, param4;
 
-    @safe pure this(ParamName paramName, string val)
+    int opApply(Dg)(scope Dg dg) if (ParameterTypeTuple!Dg.length == 2)
     {
-        name  = paramName;
-        value = val;
+        return 0;
     }
 }
 
@@ -120,14 +117,6 @@ class InvalidTimestampException : Exception
     }
 }
 
-class VariableAlreadyAddedException : Exception
-{
-    @safe pure this(string name)
-    {
-        super("Variable already added: " ~ name);
-    }
-}
-
 class InvalidIdxException : Exception
 {
     @safe pure this(string name)
@@ -138,56 +127,17 @@ class InvalidIdxException : Exception
 
 class Content
 {
-    private VariableCollection variableCollection;
+    immutable string value, variables;
 
-    immutable string value;
-
-    @safe @property pure VariableCollection variables()
+    @safe pure this(string content, Variables variables = Variables.init)
     {
-        return variableCollection;
-    }
-
-    @safe pure this(string content, VariableCollection variables = new VariableCollection)
-    {
-        value              = content;
-        variableCollection = variables;
+        value     = content;
+        variables = variables;
     }
 
     @safe pure override string toString()
     {
         return value;
-    }
-}
-
-class VariableCollection
-{
-    private Variable[] variables;
-
-    @safe @property pure Variable[] all()
-    {
-        return variables;
-    }
-
-    @safe VariableCollection set(Variable[] variables)
-    {
-        foreach (Variable variable; variables) {
-            add(variable);
-        }
-
-        return this;
-    }
-
-    @safe VariableCollection add(Variable variable)
-    {
-        foreach (Variable var; variables) {
-            if (variable.name == var.name) {
-                throw new VariableAlreadyAddedException(variable.name);
-            }
-        }
-
-        variables ~= variable;
-
-        return this;
     }
 }
 

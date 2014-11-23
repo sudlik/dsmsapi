@@ -16,8 +16,7 @@ import dsmsapi.core :
     Receiver,
     RequestBuilder,
     Resource,
-    Variable,
-    VariableCollection;
+    Variables;
 
 enum Charset : string
 {
@@ -198,9 +197,9 @@ class Pattern : Content
         super(value);
     }
 
-    @safe pure this(string value, VariableCollection variableCollection)
+    @safe pure this(string value, Variables variables)
     {
-        super(value, variableCollection);
+        super(value, variables);
     }
 }
 
@@ -231,10 +230,10 @@ class TwoWay : Sms
 class Builder
 {
     private:
-        Charset            messageCharset     = Charset.init;
-        bool               normalizeMessage   = false;
-        bool               singleMessage      = false;
-        VariableCollection variableCollection = new VariableCollection;
+        Charset   messageCharset   = Charset.init;
+        bool      normalizeMessage = false;
+        bool      singleMessage    = false;
+        Variables vars             = Variables.init;
 
         Content    content;
         Receiver[] receivers;
@@ -262,11 +261,6 @@ class Builder
             return sendDate = send;
         }
 
-        @safe @property pure VariableCollection variables(VariableCollection variables)
-        {
-            return variableCollection = variables;
-        }
-
         @safe this(Sender sender, Content content, Receiver[] receivers)
         {
             this.sender  = sender;
@@ -289,17 +283,17 @@ class Builder
 
         @safe Eco createEco()
         {
-            return new Eco(receivers, createContent(), createConfig());
+            return new Eco(receivers, content, createConfig());
         }
 
         @safe Pro createPro()
         {
-            return new Pro(sender, receivers, createContent(), createConfig());
+            return new Pro(sender, receivers, content, createConfig());
         }
 
         @safe TwoWay createTwoWay()
         {
-            return new TwoWay(receivers, createContent(), createConfig());
+            return new TwoWay(receivers, content, createConfig());
         }
 
     private:
@@ -317,19 +311,6 @@ class Builder
         @safe Config createConfig()
         {
             return Config(messageCharset, normalizeMessage, sendDate, singleMessage);
-        }
-
-        @safe Content createContent()
-        {
-            if (!empty(variableCollection.all())) {
-                if(cast(Pattern)this.content) {
-                    return new Pattern(this.content.value, this.variableCollection);
-                } else {
-                    return new Content(this.content.value, this.variableCollection);
-                }
-            } else {
-                return this.content;
-            }
         }
 }
 
@@ -395,8 +376,8 @@ class Send : Method
                 requestBuilder.setParameter(new Parameter(ParamName.single, "1"));
             }
 
-            foreach (Variable variable; sms.content.variables.all()) {
-                requestBuilder.setParameter(new Parameter(variable.name, variable.value));
+            foreach (string name, string value; sms.content.variables) {
+                requestBuilder.setParameter(new Parameter(name, value));
             }
 
             if (cast(Pattern)sms.content) {
