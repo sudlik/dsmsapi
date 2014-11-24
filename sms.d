@@ -47,8 +47,9 @@ immutable struct Sender
 struct SendDate
 {
     private:
+        bool isImmediately = true;
+
         DateTime expirationDate;
-        bool     isImmediately = false;
         DateTime sendDate;
 
     public:
@@ -75,11 +76,10 @@ struct SendDate
             SysTime sendSysTime    = SysTime(send);
             SysTime currentSysTime = Clock.currTime();
 
-            if (send == DateTime.init) {
-                isImmediately = true;
-            } else {
-                maxSysTime = currentSysTime;
-                timestamp  = sendSysTime.toUnixTime();
+            if (send != DateTime.init) {
+                isImmediately = false;
+                maxSysTime    = currentSysTime;
+                timestamp     = sendSysTime.toUnixTime();
 
                 maxSysTime.add!"months"(3);
 
@@ -376,8 +376,17 @@ class Send : Method
                 requestBuilder.setParameter(new Parameter(ParamName.single, "1"));
             }
 
-            foreach (string name, string value; sms.content.variables) {
-                requestBuilder.setParameter(new Parameter(name, value));
+            if (sms.content.variables.param1 != string.init) {
+                requestBuilder.setParameter(new Parameter(ParamName.param1, sms.content.variables.param1));
+            }
+            if (sms.content.variables.param2 != string.init) {
+                requestBuilder.setParameter(new Parameter(ParamName.param1, sms.content.variables.param2));
+            }
+            if (sms.content.variables.param3 != string.init) {
+                requestBuilder.setParameter(new Parameter(ParamName.param1, sms.content.variables.param3));
+            }
+            if (sms.content.variables.param4 != string.init) {
+                requestBuilder.setParameter(new Parameter(ParamName.param1, sms.content.variables.param4));
             }
 
             if (cast(Pattern)sms.content) {

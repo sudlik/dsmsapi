@@ -91,13 +91,28 @@ struct Idx
     }
 }
 
-immutable struct Variables
+struct Variables
 {
-    string param1, param2, param3, param4;
+    private string parameter1, parameter2, parameter3, parameter4;
 
-    int opApply(Dg)(scope Dg dg) if (ParameterTypeTuple!Dg.length == 2)
+    @safe @property pure string param1()
     {
-        return 0;
+        return parameter1;
+    }
+
+    @safe @property pure string param2()
+    {
+        return parameter2;
+    }
+
+    @safe @property pure string param3()
+    {
+        return parameter3;
+    }
+
+    @safe @property pure string param4()
+    {
+        return parameter4;
     }
 }
 
@@ -127,12 +142,24 @@ class InvalidIdxException : Exception
 
 class Content
 {
-    immutable string value, variables;
+    private Variables vars;
 
-    @safe pure this(string content, Variables variables = Variables.init)
+    immutable string value;
+
+    @safe @property pure Variables variables()
     {
-        value     = content;
-        variables = variables;
+        return vars;
+    }
+
+    @safe pure this(string content)
+    {
+        value = content;
+    }
+
+    @safe pure this(string content, Variables variables)
+    {
+        value = content;
+        vars  = variables;
     }
 
     @safe pure override string toString()

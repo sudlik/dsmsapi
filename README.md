@@ -358,7 +358,6 @@ void main()
  * redesign `hlr.d` like `sms.d`
  * rethink current visibility (http://dlang.org/attribute.html#ProtectionAttribute)
  * add `ReceiverSet` that can not be empty
- * rethink `VariableCollection`
  * add tests for SMSAPI
  * create `Message` with internally choosen type (SMS, MMS...)
  * api error codes as excepetions
