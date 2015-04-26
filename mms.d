@@ -1,5 +1,6 @@
 module dsmsapi.mms;
 
+import core.time    : dur;
 import std.conv     : text;
 import std.datetime : DateTime, DateTimeException, SysTime;
 
