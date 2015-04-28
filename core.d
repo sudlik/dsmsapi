@@ -13,16 +13,15 @@ debug (WITHOUT_SEND) {
     import std.stdio : writeln;
 }
 
-import std.array    : empty;
-import std.conv     : to;
+import std.array : empty;
+import std.conv : to;
 import std.net.curl : get;
-import std.regex    : matchFirst;
-import std.traits   : ParameterTypeTuple;
-import std.uri      : encode;
+import std.regex : matchFirst;
+import std.uri : encode;
 
 enum Server : string
 {
-    default_    = "https://ssl.smsapi.pl/",
+    standard = "https://ssl.smsapi.pl/",
     alternative = "https://ssl2.smsapi.pl/",
 }
 
@@ -36,28 +35,28 @@ enum Resource : string
 
 enum ParamName : string
 {
-    date           = "date",
-    encoding       = "encoding",
+    date = "date",
+    encoding = "encoding",
     expirationDate = "expiration_date",
-    format         = "format",
-    from           = "from",
-    idx            = "idx",
-    message        = "message",
-    normalize      = "normalize",
-    number         = "number",
-    param1         = "param1",
-    param2         = "param2",
-    param3         = "param3",
-    param4         = "param4",
-    password       = "password",
-    single         = "single",
-    smil           = "smil",
-    subject        = "subject",
-    tmpl           = "template",
-    test           = "test",
-    tts            = "tts",
-    to             = "to",
-    username       = "username",
+    format = "format",
+    from = "from",
+    idx = "idx",
+    message = "message",
+    normalize = "normalize",
+    number = "number",
+    param1 = "param1",
+    param2 = "param2",
+    param3 = "param3",
+    param4 = "param4",
+    password = "password",
+    single = "single",
+    smil = "smil",
+    subject = "subject",
+    tmpl = "template",
+    test = "test",
+    tts = "tts",
+    to = "to",
+    username = "username",
 }
 
 struct Receiver
@@ -159,7 +158,7 @@ class Content
     @safe pure this(string content, Variables variables)
     {
         value = content;
-        vars  = variables;
+        vars = variables;
     }
 
     @safe pure override string toString()
@@ -177,8 +176,8 @@ interface Method
 
 abstract class Message
 {
-    Receiver[]  messageReceivers;
-    Content     messageContent;
+    Receiver[] messageReceivers;
+    Content messageContent;
 
     @safe @property pure Receiver[] receivers()
     {
@@ -194,15 +193,15 @@ abstract class Message
 class Parameter
 {
     immutable {
-        string   name;
-        string   value;
+        string name;
+        string value;
         string[] values;
     }
 
     this(string name, string value)
     {
-        this.name   = name;
-        this.value  = encode(value);
+        this.name = name;
+        this.value = encode(value);
         this.values = [];
     }
 
@@ -224,9 +223,9 @@ class Parameter
 class RequestBuilder
 {
     private:
-        Resource          methodResource;
+        Resource methodResource;
         Parameter[string] parameters;
-        Server            serverName;
+        Server serverName;
 
     public:
         @safe @property pure Resource resource(Resource resource)
@@ -245,6 +244,11 @@ class RequestBuilder
 
             return this;
         }
+	
+		@safe pure Parameter[string] getParameters()
+		{
+			return parameters;
+		}
 
         Request create()
         {

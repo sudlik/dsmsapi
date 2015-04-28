@@ -360,5 +360,4 @@ void main()
  * add `ReceiverSet` that can not be empty
  * add tests for SMSAPI
  * create `Message` with internally choosen type (SMS, MMS...)
- * api error codes as excepetions
  * move `ParamName` to classes

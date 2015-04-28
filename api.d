@@ -1,39 +1,62 @@
 module dsmsapi.api;
 
-import std.conv          : text, to;
+import std.conv : text, to;
 import std.digest.digest : toHexString;
-import std.digest.md     : md5Of;
-import std.json          : JSON_TYPE, JSONException, JSONValue, parseJSON;
-import std.regex         : matchFirst;
-import std.string        : format;
-import std.traits        : hasMember;
+import std.digest.md : md5Of;
+import std.format : format;
+import std.json : JSON_TYPE, JSONException, JSONValue, parseJSON;
 
 import dsmsapi.core: Method, Parameter, ParamName, RequestBuilder, Server;
 
 immutable struct Item
 {
-    ulong  id;
-    ulong  number;
-    float  points;
+    ulong id;
+    ulong number;
+    float points;
     string status;
+}
+
+class ApiException : Exception
+{
+	immutable {
+		long code;
+		string message;
+	}
+
+	@safe pure this(long code, string message)
+	{
+		this.code = code;
+		this.message = message;
+
+		super(format("Code: %d. Message: %s", code, message));
+	}
+}
+
+class UnexpectedResponseException : Exception
+{
+	private static const message = "Unexpected response: ";
+
+	@safe pure this(string response)
+	{
+		super(message ~ response);
+	}
+
+	this(JSONValue response)
+	{
+		super(message ~ response.toString);
+	}
+
+	@safe pure this(string response, Throwable next)
+	{
+		super(message ~ response, next);
+	}
 }
 
 class Response
 {
-    private static const unexpectedResponse = "Lib error: unexpected API response";
-
-    private bool isSuccess = false;
-
     immutable {
-        long   count;
-        long   error;
+        long count;
         Item[] list;
-        string message;
-    }
-
-    @safe @property pure bool success()
-    {
-        return isSuccess;
     }
 
     this(JSONValue response)
@@ -44,31 +67,33 @@ class Response
         }
 
         if ("error" in values) {
-            error = response["error"].integer();
+			string message = "";
 
             if ("message" in values) {
                 message = response["message"].str();
             }
-        } else if ("count" in values && "list" in values) {
-            bool  hasUnexpected = false;
 
-            float  points;
+			throw new ApiException(response["error"].integer(), message);
+        } else if ("count" in values && "list" in values) {
+            float points;
             Item[] items;
 
-            isSuccess = true;
-            count     = response["count"].integer();
+            count = response["count"].integer();
 
             foreach (JSONValue item; response["list"].array()) {
-                if (item["points"].type() == JSON_TYPE.FLOAT) {
-                    points = item["points"].floating();
-                } else if (item["points"].type() == JSON_TYPE.INTEGER) {
-                    points = item["points"].integer();
-                } else if (item["points"].type() == JSON_TYPE.STRING) {
-                    points = to!float(item["points"].str());
-                } else {
-                    hasUnexpected = true;
-                    points        = 0;
-                }
+				switch (item["points"].type()) {
+					case JSON_TYPE.FLOAT:
+						points = item["points"].floating();
+						break;
+					case JSON_TYPE.INTEGER:
+						points = item["points"].integer();
+						break;
+					case JSON_TYPE.STRING:
+						points = to!float(item["points"].str());
+						break;
+					default:
+						throw new UnexpectedResponseException(response);
+				}
 
                 items ~= Item(
                     to!ulong(item["id"].str()),
@@ -78,14 +103,9 @@ class Response
                 );
             }
 
-            if (hasUnexpected) {
-                message = unexpectedResponse;
-            }
-
             list = cast(immutable Item[])items;
         } else if ("id" in values && "price" in values && "number" in values && "status" in values) {
-            isSuccess = true;
-            count     = 1;
+            count = 1;
 
             list ~= Item(
                 to!ulong(response["id"].str()),
@@ -94,39 +114,35 @@ class Response
                 response["status"].str()
             );
         } else {
-            message = unexpectedResponse;
+			throw new UnexpectedResponseException(response);
         }
     }
 
     override string toString()
     {
-        if (isSuccess) {
-            string response = format("Success! Count: %d", count);
+        string response = format("Success! Count: %d", count);
 
-            foreach (int i, Item item; list) {
-                response ~=
-                    "\r\n"
-                    ~ format(
-                        `%d. Id: %d, points: %f, number: %d, status: %s.`,
-                        i + 1,
-                        item.id,
-                        item.points,
-                        item.number,
-                        item.status
-                    );
-            }
-
-            return response;
-        } else {
-            return format("Failure! Error code: %d, message: %s.", error, message);
+        foreach (int i, Item item; list) {
+            response ~=
+                "\r\n"
+                ~ format(
+                    `%d. Id: %d, points: %f, number: %d, status: %s.`,
+                    i + 1,
+                    item.id,
+                    item.points,
+                    item.number,
+                    item.status
+                );
         }
+
+        return response;
     }
 }
 
 class User
 {
     immutable {
-        string    name;
+        string name;
         ubyte[16] hash;
     }
 
@@ -152,15 +168,15 @@ class Api
         }
 
         Server server;
-        bool   test;
-        User   user;
+        bool test;
+        User user;
 
     public:
         @safe pure this(User user, Server server = Server.init, bool test = false)
         {
-            this.user   = user;
+            this.user = user;
             this.server = server;
-            this.test   = test;
+            this.test = test;
         }
 
         Response execute(Method apiMethod)
@@ -185,9 +201,7 @@ class Api
             try {
                 return new Response(parseJSON(response));
             } catch (JSONException exception) {
-                return new Response(
-                    parseJSON(`{"error":0,"message":"Lib error. Unexpected API response: ` ~ response ~ `"}`)
-                );
+				throw new UnexpectedResponseException(response, exception);
             }
         }
 }
